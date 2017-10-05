@@ -1,0 +1,23 @@
+﻿<modern:ModernWindow x:Class="Methods_Console.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:modern="clr-namespace:ModernChrome;assembly=ModernChrome"              
+        xmlns:local="clr-namespace:Methods_Console"
+        xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"             
+        mc:Ignorable="d"
+        Title="Methods Console" Height="600" Width="900">
+    <Grid>
+        <StackPanel HorizontalAlignment="Left" Margin="10,10,0,10" Width="145">
+            <TextBlock x:Name="TasksText" Height="27" Margin="10,0" TextWrapping="Wrap" FontSize="13.333" FontFamily="Arial" Foreground="#FFFDF9F9" Text=" Tasks" ToolTip="Find something to do!!"/>
+            <Button x:Name="setupsheetbutton" Content="Create a Setup Sheet" Height="22.5" Margin="12.798,0" Focusable="False" TabIndex="1" ToolTip="Use program exports and BOM to create a setup sheet." FontFamily="Arial" BorderBrush="{x:Null}" Background="{x:Null}" Custom:ControlsHelper.ContentCharacterCasing="Upper" BorderThickness="0" Foreground="#FFFDF9F9" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" HorizontalContentAlignment="Left" IsTabStop="False"/>
+            <Button x:Name="comparebutton" Content="Verify a Setup Sheet" Height="22.5" Margin="12.798,0,18.801,0" Focusable="False" TabIndex="2" ToolTip="Compare the old setup sheet and programs to the new ones.  Recommended to use each time you create a new Setup Sheet!" FontFamily="Arial" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Foreground="#FFFDF9F9" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalContentAlignment="Left" IsTabStop="False"/>
+            <Button x:Name="famcheckbutton" Content="Verify a Family" Height="22.5" Margin="12.798,0,49.515,0" Focusable="False" TabIndex="2" ToolTip="Use a group of Setup Sheets to determine if the group is a family." FontFamily="Arial" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Foreground="#FFFDF9F9" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalContentAlignment="Left" IsTabStop="False"/>
+            <Button x:Name="themebutton" Content="Toggle Theme" Height="22.5" Margin="12.798,0,18.801,0" Focusable="False" TabIndex="2" ToolTip="Change the color scheme of the Methods Console. Keep clicking to cycle through the different themes." FontFamily="Arial" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Foreground="#FFFDF9F9" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalContentAlignment="Left" IsTabStop="False" Width="113.401" Click="button_Copy2_Click" Tag="Blend"/>
+        </StackPanel>
+    </Grid>
+    <modern:ModernWindow.StatusBar>
+        <TextBlock VerticalAlignment="Center">Ready</TextBlock>
+    </modern:ModernWindow.StatusBar>
+</modern:ModernWindow>
