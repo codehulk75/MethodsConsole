@@ -13,5 +13,6 @@ namespace Methods_Console
     /// </summary>
     public partial class App : Application
     {
+
     }
 }

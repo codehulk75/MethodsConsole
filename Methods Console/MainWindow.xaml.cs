@@ -21,56 +21,87 @@ namespace Methods_Console
     /// </summary>
     public partial class MainWindow
     {
-        int themenum = 1;
+        int themenum = Properties.Settings.Default.WindowThemeNumber;
+        int borderbrushnum = Properties.Settings.Default.StatusBarThemeNumber;
+        Dictionary<int, string> themes = new Dictionary<int, string>();
+        Dictionary<int, string> borderBrushes = new Dictionary<int, string>();
         public MainWindow()
         {
             InitializeComponent();
+            InitializeThemeColors();
+            try
+            {
+                ThemeManager.ChangeTheme(Application.Current, themes[themenum]);
+                BorderBrush = Application.Current.FindResource($"StatusBar{borderBrushes[borderbrushnum]}BrushKey") as SolidColorBrush;
+                SetBrushes(themes[themenum]);
+            }
+            catch (Exception)
+            {
+                MessageBox.Show("Error setting window skin.\nMainWindow()->ThemeManager.ChangeTheme())");
+            }
             ThemeManager.ThemeChanged += (sender, args) =>
             {
-                if (args.Theme != "Light")
-                {
-                    TasksText.Foreground = Brushes.White;
-                    setupsheetbutton.Foreground = Brushes.White;
-                    famcheckbutton.Foreground = Brushes.White;
-                    themebutton.Foreground = Brushes.White;
-                    comparebutton.Foreground = Brushes.White;
-                }
-                else
-                {
-                    TasksText.Foreground = Brushes.Black;
-                    setupsheetbutton.Foreground = Brushes.Black;
-                    famcheckbutton.Foreground = Brushes.Black;
-                    themebutton.Foreground = Brushes.Black;
-                    comparebutton.Foreground = Brushes.Black;
-                }
+                SetTheme(args.Theme, borderbrushnum);
             };
         }
 
-        private void button_Copy2_Click(object sender, RoutedEventArgs e)
+        private void InitializeThemeColors()
+        {
+            themes.Add(1, "LightBlue");
+            themes.Add(2, "DarkBlue");
+            themes.Add(3, "Light");
+            themes.Add(4, "Dark");
+            themes.Add(5, "Blend");
+            borderBrushes.Add(1, "Blue");
+            borderBrushes.Add(2, "Orange");
+            borderBrushes.Add(3, "Purple");
+            borderBrushes.Add(4, "Green");
+        }
+
+        private void SetBrushes(String strThemeColor)
+        {
+            if (strThemeColor != "Light")
+            {
+                TasksText.Foreground = Brushes.White;
+                setupsheetbutton.Foreground = Brushes.White;
+                famcheckbutton.Foreground = Brushes.White;
+                themebutton.Foreground = Brushes.White;
+                comparebutton.Foreground = Brushes.White;
+            }
+            else
+            {
+                TasksText.Foreground = Brushes.Black;
+                setupsheetbutton.Foreground = Brushes.Black;
+                famcheckbutton.Foreground = Brushes.Black;
+                themebutton.Foreground = Brushes.Black;
+                comparebutton.Foreground = Brushes.Black;
+            }
+        }
+
+        private void SetTheme(String strThemeColor, int nBorderColor)
+        {
+            BorderBrush = Application.Current.FindResource($"StatusBar{borderBrushes[nBorderColor]}BrushKey") as SolidColorBrush;
+            SetBrushes(strThemeColor);
+            int colorKey = themes.FirstOrDefault(x => x.Value == strThemeColor).Key;
+            Properties.Settings.Default.StatusBarThemeNumber = nBorderColor;
+            Properties.Settings.Default.WindowThemeNumber = colorKey;
+            Properties.Settings.Default.Save();
+        }
+
+        private void button_theme_Click(object sender, RoutedEventArgs e)
         {
             ++themenum;
-            switch (themenum)
-            {
-                case 1:
-                    ThemeManager.ChangeTheme(Application.Current, "LightBlue");
-                    break;
-                case 2:
-                    ThemeManager.ChangeTheme(Application.Current, "DarkBlue");
-                    break;
-                case 3:
-                    ThemeManager.ChangeTheme(Application.Current, "Light");
-                    break;
-                case 4:
-                    ThemeManager.ChangeTheme(Application.Current, "Dark");
-                    break;
-                case 5:
-                    ThemeManager.ChangeTheme(Application.Current, "Blend");
-                    break;
-                default:
-                    themenum = 1;
-                    ThemeManager.ChangeTheme(Application.Current, "LightBlue");
-                    break;
-            }
+            if (themenum > 5)
+                themenum = 1;
+            ThemeManager.ChangeTheme(Application.Current, themes[themenum]);
+        }
+
+        private void themebutton_MouseRightButtonDown(object sender, MouseButtonEventArgs e)
+        {
+            ++borderbrushnum;
+            if (borderbrushnum > 4)
+                borderbrushnum = 1;
+            SetTheme(themes[themenum], borderbrushnum);
         }
     }
 }
