@@ -25,6 +25,7 @@ namespace Methods_Console
         int borderbrushnum = Properties.Settings.Default.StatusBarThemeNumber;
         Dictionary<int, string> themes = new Dictionary<int, string>();
         Dictionary<int, string> borderBrushes = new Dictionary<int, string>();
+        List<FileParser> ci2List = new List<FileParser>();
         public MainWindow()
         {
             InitializeComponent();
@@ -102,6 +103,46 @@ namespace Methods_Console
             if (borderbrushnum > 4)
                 borderbrushnum = 1;
             SetTheme(themes[themenum], borderbrushnum);
+        }
+
+        private void LoadBOM()
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".xls";
+            dlg.Filter = "BOM Explosion/BAAN BOM|*.xls;*.csv;*.txt";
+            dlg.Multiselect = false;
+            dlg.Title = "Load the BOM File";
+            bool? result = dlg.ShowDialog();
+            if (result == true)
+            {
+                string filename = dlg.FileName;
+                FileParserFactory factory = new BOMExplosionParserFactory(filename);
+                FileParser parser = factory.GetFileParser();
+            }
+        }
+
+        private void setupsheetbutton_Click(object sender, RoutedEventArgs e)
+        {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".ci2";
+            dlg.Filter = "Universal Export|*.ci2|All Files|*.*";
+            dlg.Multiselect = true;
+            dlg.Title = "Load the Program Exports";
+            bool? result = dlg.ShowDialog();
+            if (result == true)
+            {
+                string[] files = dlg.FileNames;
+                foreach (var filename in files)
+                {
+                    FileParserFactory factory = new Ci2ParserFactory(filename);
+                    FileParser parser = factory.GetFileParser();
+                    if(parser != null)
+                    {
+                        ci2List.Add(parser);
+                    }
+                }
+            }
+            LoadBOM();
         }
     }
 }
