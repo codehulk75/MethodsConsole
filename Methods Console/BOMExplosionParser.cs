@@ -90,12 +90,24 @@ namespace Methods_Console
                 ClearData();
                 MessageBox.Show("Problem loading BOM. Please check the file and try again.\n" + e.Message, "ParseBomExplosion()");
             }
-            string[] strarray = ValueArray[1, 2].ToString().Split();
-            string str = string.Join(" ", strarray);
-            if (FileType.Equals(".xls") && str.Equals("BOM Explosion Report"))
+
+            //Determine whether it's a legit csv or excel bom explosion and send it to the correct method
+            string strCsv = null;
+            string strExcel = null;
+            if (ValueArray[1,1] != null)
+            {
+                string[] strCsvArray = ValueArray[1, 1].ToString().Split();
+                strCsv = string.Join(" ", strCsvArray);
+            }
+            if (ValueArray[1,2] != null)
+            {
+                string[] strExcelArray = ValueArray[1, 2].ToString().Split();
+                strExcel = string.Join(" ", strExcelArray);
+            }    
+            if (FileType.Equals(".xls") && strExcel.Equals("BOM Explosion Report"))
                 ProcessExcelBOM();
-            else if (FileType.Equals(".csv"))
-                ProcessCsvBOM();
+            else if (FileType.Equals(".csv") && strCsv.Equals("BOM Explosion Report"))
+                 ProcessCsvBOM();
             else
             {
                 ClearData();
@@ -111,6 +123,7 @@ namespace Methods_Console
 
         private void ProcessCsvBOM()
         {
+
             MessageBox.Show("ProcessCsvBOM() coming soon!", "Maybe...");
         }
 
