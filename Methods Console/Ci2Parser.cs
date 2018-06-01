@@ -22,6 +22,8 @@ namespace Methods_Console
         public string CustomerDbName { get; private set; }
         public string ProgramName { get; private set; }
         public string MainCircuitName { get; private set; }
+        public string MachineName { get; set; }
+        public string Pass { get; set; }
         public List<string> Lines { get; private set; }
         public Dictionary<string, Dictionary<string, List<string>>> Refdesmap { get; private set; }
         public Dictionary<string, List<string>> Feedermap { get; private set; }
@@ -32,6 +34,8 @@ namespace Methods_Console
         //Constructor
         public Ci2Parser(string path)
         {
+            MachineName = "";
+            Pass = "";
             FileType = Path.GetExtension(path);
             FullFilePath = path;
             CircuitCount = 1;

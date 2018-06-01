@@ -24,7 +24,8 @@ namespace Methods_Console
             FileName = null;
             FullFilePath = null;
             hasRouting = false;
-            Array.Clear(ValueArray, 1, ValueArray.Length);
+            if(ValueArray != null && ValueArray.Length > 0)
+                Array.Clear(ValueArray, 1, ValueArray.Length);
         }
         public BOMExplosionParser(string path, string fileExtension)
         {
@@ -55,7 +56,8 @@ namespace Methods_Console
 
         private void ParseBaanBom()
         {
-            MessageBox.Show("ParseBaanBom() will be done soon!", "lazy sry not sry");
+            //Regex routeStep = new Regex()
+            MessageBox.Show("ParseBaanBom() coding is in process!", "I'M WORKIN' ON IT!!!");
         }
 
         private void ParseBomExplosion()
