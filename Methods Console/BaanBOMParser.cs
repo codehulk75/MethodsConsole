@@ -18,8 +18,9 @@ namespace Methods_Console
         public string DateOfListing { get; private set; }
         public string Description { get; private set; }
         public string Rev { get; private set; }
+        public List<string> RouteList { get; private set; }
 
-        public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<Findnum>:<Sequence>', List = [0]Part Number, [1]Operation, [2]comma-separated ref des's 
+        public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<Findnum>:<Sequence>', List = [0]Part Number, [1]Operation, [2]Description, [3]comma-separated ref des's 
         public List<string> BomLines { get; private set; }
 
         public BaanBOMParser(string path)
@@ -33,9 +34,11 @@ namespace Methods_Console
             FileType = Path.GetExtension(FullFilePath);
             BomMap = new Dictionary<string, List<string>>();
             BomLines = new List<string>();
+            RouteList = new List<string>();
             LoadBaanBom();
             ParseBaanBom();
-            MessageBox.Show("dun", "dun");
+ 
+            MessageBox.Show(string.Join("\n", RouteList.ToArray()), "Routing");          
         }
 
         private void LoadBaanBom()
@@ -61,12 +64,12 @@ namespace Methods_Console
 
         private void ParseBaanBom()
         {
-            Regex reItemInfoRow= new Regex(@"1\s+\|\s+([0-9]{1,4})/\s+([1-2])\|(\w+-?\w+)\s*\|.*\|Purchased\s+\|\s+([0-9]{1,4})"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation
+            Regex reItemInfoRow= new Regex(@"1\s+\|\s+([0-9]{1,4})/\s+([0-9])\|(\w+-?\w+)\s*\|(.*)\|Purchased\s+\|\s+([0-9]{1,4})"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation
             Regex reDate = new Regex(@"Date\s+:\s(\d{2}-\d{2}-\d{2})");
             Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
             Regex reRev = new Regex(@"Revision\s+:\s+(\S+)");
-            Regex reRouteList = new Regex(@"\s+|Routing Item\s+:");
+            Regex reRouteList = new Regex(@"^\s+\|\s+(\d{1,4})/\s+\d\s+\|\s+(\d{1,4})\s+\|(.*)\|\d{2}-\d{2}-\d{2}\s+\|\s+\|\s+\w+\s+\|\s+\|\s+\d{1,3}\s+\|\s+\d+\.\d+\s+\|\s+\d+\.\d+\s*\|\s+\|\r?$");
             Regex reDescription = new Regex(@"^Description\s+:\s+(.*)");
             bool bDateFound = false;
             bool bAssemblyNameFound = false;
@@ -123,14 +126,16 @@ namespace Methods_Console
                     {   
                         string strFnSeq = match.Groups[1].Value + ":" + match.Groups[2].Value;
                         string strPN = match.Groups[3].Value;
-                        string strOp = match.Groups[4].Value;
+                        string strDesc = match.Groups[4].Value;
+                        string strOp = match.Groups[5].Value;
+
                         if (BomMap.ContainsKey(strFnSeq))
-                            MessageBox.Show(string.Format("Duplicate Findnum/Sequence combination found!\nThis should not happen!  Check BOM:\n" + "Key: = {0}, PN: = {4}\nExisting Tuple Values: {1}, {2}, {3}", strFnSeq, BomMap[strFnSeq][0], BomMap[strFnSeq][1], BomMap[strFnSeq][2], strPN), "BOM Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show(string.Format("Duplicate Findnum/Sequence combination found!\nThis should not happen!  Check BOM:\n" + "Key: = {0}, PN: = {4}\nExisting Values: {1}, {2}, {3}", strFnSeq, BomMap[strFnSeq][0], BomMap[strFnSeq][1], BomMap[strFnSeq][2], strPN), "BOM Error", MessageBoxButton.OK, MessageBoxImage.Error);
                         else
                         {
-                            BomMap.Add(strFnSeq, new List<string> { strPN, strOp, "" });
+                            BomMap.Add(strFnSeq, new List<string> { strPN, strOp, strDesc.Trim(), "" });
                             if (!string.IsNullOrEmpty(strCurrentFnSeq) && BomMap[strCurrentFnSeq].Count > 2)
-                                BomMap[strCurrentFnSeq][2] = BomMap[strCurrentFnSeq][2].TrimEnd(',');
+                                BomMap[strCurrentFnSeq][3] = BomMap[strCurrentFnSeq][3].TrimEnd(',');
 
                             strCurrentFnSeq = strFnSeq;                        
                         }                           
@@ -139,14 +144,17 @@ namespace Methods_Console
                     Match matchRds = reRefDes.Match(line);
                     if (matchRds.Success)
                     {
-                        BomMap[strCurrentFnSeq][2] += matchRds.Groups[1].Value + ",";
+                        BomMap[strCurrentFnSeq][3] += matchRds.Groups[1].Value + ",";
+                        continue;
+                    }
+                    Match matchRouteList = reRouteList.Match(line);
+                    if (matchRouteList.Success)
+                    {
+                        string strRouteStep = matchRouteList.Groups[1].Value + ":" + matchRouteList.Groups[2].Value + ":" + matchRouteList.Groups[3].Value.Trim();
+                        RouteList.Add(strRouteStep);
                     }
 
                 }
-                //lengths.Sort();
-                //widths.Sort();
-                //PanelLength = lengths.Last();
-                //PanelWidth = widths.Last();
             }
             catch (Exception e)
             {

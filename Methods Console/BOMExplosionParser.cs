@@ -57,19 +57,13 @@ namespace Methods_Console
         private void ParseBaanBom()
         {
             BaanBomParserFactory factory = new BaanBomParserFactory(FullFilePath);
-            if(factory != null)
-            {
-                BaanBOMParser baanparser = (BaanBOMParser)factory.GetFileParser();
-
-
-            }
+            BaanBOMParser baanparser = null;
+            if (factory != null)
+                baanparser = (BaanBOMParser)factory.GetFileParser();         
             else
-            {
                 MessageBox.Show("BAAN BOM Parsing Failed", "BOMExplosionParser.ParseBAANBom()");
-            }
-            
-            //Regex routeStep = new Regex()
-            MessageBox.Show("ParseBaanBom() coding is in process!", "I'M WORKIN' ON IT!!!");
+            string assy = baanparser.AssemblyName;
+            string desc = baanparser.Description;
         }
 
         private void ParseBomExplosion()
@@ -146,23 +140,27 @@ namespace Methods_Console
             bool isvalid = false;
             bool hasbomline = false;
             bool hasroutingline = false;
+            bool hasroutingitem = false;
             
             string line;
-            Regex bomline = new Regex(@"BILLS OF MATERIAL\s+\(MULTILEVEL\)\s+\(WITH BOM QUANTITIES\)");
-            Regex routingline = new Regex(@"Routing Item");
+            Regex reBomLine = new Regex(@"BILLS OF MATERIAL\s+\(MULTILEVEL\)\s+\(WITH BOM QUANTITIES\)");
+            Regex reRoutingLine = new Regex(@"\(Including\sRouting\)");
+            Regex reRoutingItem = new Regex(@"Routing Item");
             try
             {
                 using (StreamReader sr = new StreamReader(FullFilePath))
                 {
                     while ((line = sr.ReadLine()) != null)
                     {
-                        if (bomline.Match(line).Success)
+                        if (reBomLine.Match(line).Success)
                             hasbomline = true;
-                        if (routingline.Match(line).Success)
+                        if (reRoutingLine.Match(line).Success)
                             hasroutingline = true;
+                        if (reRoutingItem.Match(line).Success)
+                            hasroutingitem = true;
                     }
                 }
-                if (hasbomline && hasroutingline)
+                if (hasbomline && hasroutingline && hasroutingitem)
                     isvalid = true;
             }
             catch (Exception e)
