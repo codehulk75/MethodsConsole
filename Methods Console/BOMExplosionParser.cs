@@ -56,6 +56,18 @@ namespace Methods_Console
 
         private void ParseBaanBom()
         {
+            BaanBomParserFactory factory = new BaanBomParserFactory(FullFilePath);
+            if(factory != null)
+            {
+                BaanBOMParser baanparser = (BaanBOMParser)factory.GetFileParser();
+
+
+            }
+            else
+            {
+                MessageBox.Show("BAAN BOM Parsing Failed", "BOMExplosionParser.ParseBAANBom()");
+            }
+            
             //Regex routeStep = new Regex()
             MessageBox.Show("ParseBaanBom() coding is in process!", "I'M WORKIN' ON IT!!!");
         }
@@ -136,8 +148,7 @@ namespace Methods_Console
             bool hasroutingline = false;
             
             string line;
-
-            Regex bomline = new Regex(@"BILLS OF MATERIAL.*SINGLE LEVEL.*WITH BOM QUANTITIES");
+            Regex bomline = new Regex(@"BILLS OF MATERIAL\s+\(MULTILEVEL\)\s+\(WITH BOM QUANTITIES\)");
             Regex routingline = new Regex(@"Routing Item");
             try
             {

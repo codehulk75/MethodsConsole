@@ -116,8 +116,8 @@ namespace Methods_Console
             if (result == true)
             {
                 string filename = dlg.FileName;
-                FileParserFactory factory = new BOMExplosionParserFactory(filename);
-                FileParser parser = factory.GetFileParser();
+                BOMExplosionParserFactory factory = new BOMExplosionParserFactory(filename);
+                BOMExplosionParser parser = (BOMExplosionParser)factory.GetFileParser();
             }
         }
 
@@ -135,7 +135,7 @@ namespace Methods_Console
                 foreach (var filename in files)
                 {
                     FileParserFactory factory = new Ci2ParserFactory(filename);
-                    FileParser parser = factory.GetFileParser();
+                    Ci2Parser parser = (Ci2Parser)factory.GetFileParser();
                     if(parser != null)
                     {
                         ci2List.Add(parser);
