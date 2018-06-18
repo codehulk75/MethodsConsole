@@ -16,29 +16,52 @@ namespace Methods_Console
         public override string FullFilePath { get; set; }
         public string AssemblyName { get; private set; }
         public string DateOfListing { get; private set; }
-        public string Description { get; private set; }
+        public string AssyDescription { get; private set; }
         public string Rev { get; private set; }
         public List<string> RouteList { get; private set; }
-
-        public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<Findnum>:<Sequence>', List = [0]Part Number, [1]Operation, [2]Description, [3]comma-separated ref des's 
+        public bool IsValid { get; private set; }
+        public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<Findnum>:<Sequence>', List = [0]Part Number, [1]Operation, [2]AssyDescription, [3]comma-separated ref des's 
         public List<string> BomLines { get; private set; }
 
         public BaanBOMParser(string path)
         {
             AssemblyName = null;
             DateOfListing = null;
-            Description = null;
+            AssyDescription = null;
             Rev = null;
             FullFilePath = path;
             FileName = Path.GetFileName(FullFilePath);
-            FileType = Path.GetExtension(FullFilePath);
+            FileType = Path.GetExtension(FullFilePath).ToLower();
             BomMap = new Dictionary<string, List<string>>();
             BomLines = new List<string>();
             RouteList = new List<string>();
             LoadBaanBom();
             ParseBaanBom();
+            SetValid();
  
             MessageBox.Show(string.Join("\n", RouteList.ToArray()), "Routing");          
+        }
+
+        private void SetValid()
+        {
+            if (!string.IsNullOrEmpty(AssemblyName) && !string.IsNullOrEmpty(AssyDescription) && !string.IsNullOrEmpty(DateOfListing) && !string.IsNullOrEmpty(Rev) && BomMap.Count > 0)
+                IsValid = true;
+            else
+                IsValid = false;
+        }
+
+        private void ClearData()
+        {
+            FileType = null;
+            FileName = null;
+            FullFilePath = null;
+            AssemblyName = null;
+            DateOfListing = null;
+            AssyDescription = null;
+            Rev = null;
+            RouteList.Clear();
+            BomMap.Clear();
+            BomLines.Clear();
         }
 
         private void LoadBaanBom()
@@ -56,15 +79,15 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error creating BOM File Parser object.\nMake sure it's a valid BaaN BOM and try again.\nLoadBaanBom()\n" + e.Message);
-                FileName = null;
-                BomLines = null;
+                MessageBox.Show("Error creating BOM File Parser object.\nMake sure it's a valid BaaN BOM and try again.\nLoadBaanBom()\n" + e.Message, "BaanBOMParser.LoadBaanBOM()", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
             }
         }
 
         private void ParseBaanBom()
         {
-            Regex reItemInfoRow= new Regex(@"1\s+\|\s+([0-9]{1,4})/\s+([0-9])\|(\w+-?\w+)\s*\|(.*)\|Purchased\s+\|\s+([0-9]{1,4})"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation
+            Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s+([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
             Regex reDate = new Regex(@"Date\s+:\s(\d{2}-\d{2}-\d{2})");
             Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
@@ -116,7 +139,7 @@ namespace Methods_Console
                         Match m = reDescription.Match(line);
                         if (m.Success)
                         {
-                            Description = m.Groups[1].Value.TrimEnd();
+                            AssyDescription = m.Groups[1].Value.TrimEnd();
                             bDescriptionFound = true;
                             continue;
                         }
@@ -128,12 +151,20 @@ namespace Methods_Console
                         string strPN = match.Groups[3].Value;
                         string strDesc = match.Groups[4].Value;
                         string strOp = match.Groups[5].Value;
-
+                        string strBOMQty = match.Groups[6].Value.Trim();
+                        strBOMQty = strBOMQty.Trim('0');
+                        if (strBOMQty.EndsWith("."))
+                            strBOMQty = strBOMQty.Trim('.');
+                        if (strBOMQty.Equals(""))
+                            strBOMQty = "0";
                         if (BomMap.ContainsKey(strFnSeq))
-                            MessageBox.Show(string.Format("Duplicate Findnum/Sequence combination found!\nThis should not happen!  Check BOM:\n" + "Key: = {0}, PN: = {4}\nExisting Values: {1}, {2}, {3}", strFnSeq, BomMap[strFnSeq][0], BomMap[strFnSeq][1], BomMap[strFnSeq][2], strPN), "BOM Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                            MessageBox.Show(string.Format("Duplicate Findnum/Sequence combination found!\nThis should not happen!  Check BOM:\n"
+                                + "Key: = {0}, PN: = {4}\nExisting Values: {1}, {2}, {3}" + "\nNot adding new part to BOM",
+                                strFnSeq, BomMap[strFnSeq][0], BomMap[strFnSeq][1], BomMap[strFnSeq][2], strPN), "BOM Error", 
+                                MessageBoxButton.OK, MessageBoxImage.Error);
                         else
                         {
-                            BomMap.Add(strFnSeq, new List<string> { strPN, strOp, strDesc.Trim(), "" });
+                            BomMap.Add(strFnSeq, new List<string> { strPN, strOp, strDesc.Trim(), "", strBOMQty });
                             if (!string.IsNullOrEmpty(strCurrentFnSeq) && BomMap[strCurrentFnSeq].Count > 2)
                                 BomMap[strCurrentFnSeq][3] = BomMap[strCurrentFnSeq][3].TrimEnd(',');
 
@@ -155,10 +186,20 @@ namespace Methods_Console
                     }
 
                 }
+                foreach(string key in BomMap.Keys)
+                {
+                    if (BomMap[key][3].Equals(""))
+                    {
+                        BomMap[key][3] = "No Ref Des";
+                    }
+                }
+
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error parsing BAAN file.\nMake sure it's a valid BaaN BOM and try again.\nParseBaanBom()\n" + e.Message, strCurrentFnSeq);
+                MessageBox.Show("Error parsing BAAN file.\nMake sure it's a valid BaaN BOM and try again.\nParseBaanBom()\n" + e.Message, strCurrentFnSeq, MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
                 throw;
             }
         }

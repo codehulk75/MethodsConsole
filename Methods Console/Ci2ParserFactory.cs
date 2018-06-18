@@ -30,7 +30,7 @@ namespace Methods_Console
         {
             if (_filename == null)
             {
-                MessageBox.Show("Error opening ci2 export file.\nCheck to make sure file is a valid ci2 and you have permission to open it.", "Ci2FileParserFactory.GetFileParser()");
+                MessageBox.Show("Error opening ci2 export file.\nCheck to make sure file is a valid ci2 and you have permission to open it.", "Ci2FileParserFactory.GetFileParser()", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
             else

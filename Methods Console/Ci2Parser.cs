@@ -24,6 +24,7 @@ namespace Methods_Console
         public string MainCircuitName { get; private set; }
         public string MachineName { get; set; }
         public string Pass { get; set; }
+        public bool IsValid { get; private set; }
         public List<string> Lines { get; private set; }
         public Dictionary<string, Dictionary<string, List<string>>> Refdesmap { get; private set; }
         public Dictionary<string, List<string>> Feedermap { get; private set; }
@@ -36,7 +37,7 @@ namespace Methods_Console
         {
             MachineName = "";
             Pass = "";
-            FileType = Path.GetExtension(path);
+            FileType = Path.GetExtension(path).ToLower();
             FullFilePath = path;
             CircuitCount = 1;
             FileName = Path.GetFileName(FullFilePath);
@@ -49,8 +50,40 @@ namespace Methods_Console
             MainCircuitName = null;
             LoadFile();
             ParseFile();
+            SetValid();
         }
 
+        public void ClearData()
+        {
+            CircuitCount = -1;
+            PanelLength = null;
+            PanelWidth = null;
+            CircuitList.Clear();
+            FileType = null;
+            FileName = null;
+            FullFilePath = null;
+            CustomerDbName = null;
+            ProgramName = null;
+            MainCircuitName = null;
+            MachineName = null;
+            Pass = null;
+            Lines.Clear();
+            Refdesmap.Clear();
+            Feedermap.Clear();
+            BypassedRefDesMap.Clear();
+            PlacementMap.Clear();
+         }
+        public void SetValid()
+        {
+            if (CircuitCount != -1 && !string.IsNullOrEmpty(PanelLength) && !string.IsNullOrEmpty(PanelWidth)
+                && !string.IsNullOrEmpty(FileType) && !string.IsNullOrEmpty(FileName) && !string.IsNullOrEmpty(FullFilePath)
+                && !string.IsNullOrEmpty(CustomerDbName) && !string.IsNullOrEmpty(ProgramName) && !string.IsNullOrEmpty(MainCircuitName)
+                && !string.IsNullOrEmpty(PanelLength) && Refdesmap.Count > 0 && Feedermap.Count > 0 && PlacementMap.Count > 0)
+            {
+                IsValid = true;
+            }
+            else IsValid = false;
+        }
         //Methods
         private void LoadFile()
         {
@@ -67,9 +100,9 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error creating Ci2 File Parser object.\nMake sure it's a valid ci2 and try again.\nLoadFile()\n" + e.Message);
-                FileName = null;
-                Lines = null;
+                MessageBox.Show("Error creating Ci2 File Parser object.\nMake sure it's a valid ci2 and try again.\nLoadFile()\n" + e.Message, "Ci2Parser.LoadFile()", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
             }
         }
 
@@ -150,7 +183,7 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                MessageBox.Show("The program had a problem parsing the board template section.\nReturning current count of " + CircuitCount.ToString() + " but could be wrong.\n" + e.Message);
+                MessageBox.Show("The program had a problem parsing the board template section.\nReturning current count of " + CircuitCount.ToString() + " but could be wrong.\n" + e.Message, "Ci2Parser:FindCircuitCount()", MessageBoxButton.OK, MessageBoxImage.Warning);
                 return Tuple.Create(false, true);
             }
         }
@@ -230,7 +263,9 @@ namespace Methods_Console
             }
             catch (Exception)
             {
-                MessageBox.Show("Error updating Feeder Map\nFeeder = " + feeder + "\nSlot = " + slot + "\nPN = " + compid, "PopulateFeederMap()");
+                MessageBox.Show("Error updating Feeder Map\nFeeder = " + feeder + "\nSlot = " + slot + "\nPN = " + compid, "PopulateFeederMap()", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
             }
         }
 
@@ -264,7 +299,9 @@ namespace Methods_Console
             }
             catch (Exception)
             {
-                MessageBox.Show("Error updating Tray\nTray = " + pallet + stack + "\nPN = " + compid, "UpdateTray()");
+                MessageBox.Show("Error updating Tray\nTray = " + pallet + stack + "\nPN = " + compid, "UpdateTray()", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
             }
 
         }
@@ -293,8 +330,11 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                string s = string.Format("Error populating RefDes Map!\nParameters:\nPart Number : {0}\nRef Des : {1}\nCircuit Name : {2}\nError : {3}", pn, rd, circuitName, e.Message);
+
+                string s = string.Format("Error populating RefDes Map!\nParameters:\nPart Number : {0}\nRef Des : {1}\nCircuit Name : {2}\nError : {3}", pn, rd, circuitName, e.Message, MessageBoxButton.OK, MessageBoxImage.Error);
                 MessageBox.Show(s, "AddToRdMap() Exception");
+                ClearData();
+                IsValid = false;
             }
         }
 
@@ -322,8 +362,10 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                string s = string.Format("Error populating BypassedRefDes Map!\nParameters:\nPart Number : {0}\nRef Des : {1}\nCircuit Name : {2}\nError : {3}", pn, rd, circuitName, e.Message);
+                string s = string.Format("Error populating BypassedRefDes Map!\nParameters:\nPart Number : {0}\nRef Des : {1}\nCircuit Name : {2}\nError : {3}", pn, rd, circuitName, e.Message, MessageBoxButton.OK, MessageBoxImage.Error);
                 MessageBox.Show(s, "AddToBypassedRdMap() Exception");
+                ClearData();
+                IsValid = false;
             }
         }
 
@@ -376,8 +418,10 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                string s = string.Format("Error populateing Placements Map!\n refdes : {0}\n pn: {1}\n x: {2}\n y : {3}\n theta : {4}\n Error:{5}", rd, pn, x, y, t, e.Message);
-                MessageBox.Show(s, "PopulatePlacemnetMap() Exception");            
+                string s = string.Format("Error populateing Placements Map!\n refdes : {0}\n pn: {1}\n x: {2}\n y : {3}\n theta : {4}\n Error:{5}", rd, pn, x, y, t, e.Message, MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show(s, "PopulatePlacemnetMap() Exception");
+                ClearData();
+                IsValid = false;
             }
 
         }
@@ -454,7 +498,9 @@ namespace Methods_Console
             }
             catch (Exception e)
             {
-                MessageBox.Show("Error parsing ci2 file.\nMake sure it's a valid ci2 and try again.\nParseFile()\n" + e.Message);
+                MessageBox.Show("Error parsing ci2 file.\nMake sure it's a valid ci2 and try again.\nParseFile()\n" + e.Message, "Ci2Parser.ParseFile()", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
                 throw;
             }  
  

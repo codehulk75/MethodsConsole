@@ -30,7 +30,7 @@ namespace Methods_Console
         {
             if (_filename == null)
             {
-                MessageBox.Show("Error opening BOM file.\nBOM should be an Agile BOM Explosion or BAAN BOM file. Try again.", "BOMExplosionParserFactory.GetFileParser()");
+                MessageBox.Show("Error opening BOM file.\nBOM should be an Agile BOM Explosion Report. Try again.", "BOMExplosionParserFactory.GetFileParser()",MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
             else

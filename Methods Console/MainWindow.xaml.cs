@@ -26,6 +26,7 @@ namespace Methods_Console
         Dictionary<int, string> themes = new Dictionary<int, string>();
         Dictionary<int, string> borderBrushes = new Dictionary<int, string>();
         List<FileParser> ci2List = new List<FileParser>();
+        BeiBOM Bom;
         public MainWindow()
         {
             InitializeComponent();
@@ -109,16 +110,25 @@ namespace Methods_Console
         {
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.DefaultExt = ".xls";
-            dlg.Filter = "BOM Explosion/BAAN BOM|*.xls;*.csv;*.txt";
+            dlg.Filter = "BOM Explosion/BAAN BOM|*.xls;*xlsx;*.csv;*.txt";
             dlg.Multiselect = false;
             dlg.Title = "Load the BOM File";
             bool? result = dlg.ShowDialog();
             if (result == true)
             {
-                string filename = dlg.FileName;
-                BOMExplosionParserFactory factory = new BOMExplosionParserFactory(filename);
-                BOMExplosionParser parser = (BOMExplosionParser)factory.GetFileParser();
+                Bom = new BeiBOM(dlg.FileName);
+                if (Bom.IsValid)
+                    MessageBox.Show(Bom.FileName + " is a valid BOM.");
+                else
+                    MessageBox.Show("Invalid BOM");
             }
+        }
+
+        private void CreateSetupSheet()
+        {
+            MessageBox.Show("Workin on CreateSetupSheet()", "not dun");
+
+
         }
 
         private void setupsheetbutton_Click(object sender, RoutedEventArgs e)
@@ -143,6 +153,7 @@ namespace Methods_Console
                 }
             }
             LoadBOM();
+            CreateSetupSheet();
         }
     }
 }

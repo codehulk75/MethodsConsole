@@ -26,7 +26,7 @@ namespace Methods_Console
         {
             if (_filename == null)
             {
-                MessageBox.Show("Error opening BAAN BOM file.\nCheck file format (does it have Operations assigned?).", "BaanBomParserFactory.GetFileParser()");
+                MessageBox.Show("Error opening BAAN BOM file.\nCheck file format (does it have Operations assigned?).", "BaanBomParserFactory.GetFileParser()", MessageBoxButton.OK, MessageBoxImage.Error);
                 return null;
             }
             else

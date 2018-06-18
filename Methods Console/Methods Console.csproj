@@ -85,6 +85,7 @@
     </Compile>
     <Compile Include="BaanBOMParser.cs" />
     <Compile Include="BaanBomParserFactory.cs" />
+    <Compile Include="BeiBOM.cs" />
     <Compile Include="BOMExplosionParser.cs" />
     <Compile Include="BOMExplosionParserFactory.cs" />
     <Compile Include="Ci2Parser.cs" />

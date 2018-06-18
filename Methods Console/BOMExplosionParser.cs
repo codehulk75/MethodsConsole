@@ -11,62 +11,66 @@ using System.Text.RegularExpressions;
 
 namespace Methods_Console
 {
+    public enum Column { Level = 1, SubClass, BeiNum, BeiRev, BeiDesc, FindNum, Quantity, UnitOfMeasure, RefDes, BomNotes };
     class BOMExplosionParser : FileParser
     {
         public override string FileType { get; set; }
         public override string FileName { get; set; }
         public override string FullFilePath { get; set; }
+        public string AssemblyName { get; private set; }
+        public string DateOfListing { get; private set; }
+        public string AssyDescription { get; private set; }
+        public string Rev { get; private set; }
+        public bool IsValid { get; private set; }
+        public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<FindNum>', List = [0]Part Number, [1]Description, [2]comma-separated ref des's, [3]bomqty
         public object[,] ValueArray { get; private set; }
-        public bool hasRouting { get; private set; }
+
+
+        public BOMExplosionParser(string path, string fileExtension)
+        {
+            AssemblyName = null;
+            DateOfListing = null;
+            AssyDescription = null;
+            Rev = null;
+            FullFilePath = path;
+            FileName = Path.GetFileName(FullFilePath);
+            FileType = Path.GetExtension(FullFilePath).ToLower();
+            BomMap = new Dictionary<string, List<string>>();          
+            ReadBomExplosion();
+            if (IsValidBomExplosion())
+            {
+                ProcessExcelBOM();
+                SetValid();
+            }                  
+            else
+            {
+                MessageBox.Show("Excel BOM files must be Agile BOM Explosions(NASHUA METHODS format), exported to .csv or .xls.\n\nPlease reload a valid BOM.", "Agile BOM Format Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                ClearData();
+                IsValid = false;
+            }
+        }
         private void ClearData()
         {
             FileType = null;
             FileName = null;
             FullFilePath = null;
-            hasRouting = false;
-            if(ValueArray != null && ValueArray.Length > 0)
+            if (ValueArray != null && ValueArray.Length > 0)
                 Array.Clear(ValueArray, 1, ValueArray.Length);
+            BomMap.Clear();
+            AssemblyName = null;
+            DateOfListing = null;
+            AssyDescription = null;
+            Rev = null;
         }
-        public BOMExplosionParser(string path, string fileExtension)
+        private void SetValid()
         {
-            FullFilePath = path;
-            FileName = Path.GetFileName(FullFilePath);
-            FileType = fileExtension;
-            hasRouting = false;
-            if (FileType.Equals(".txt"))
-            {
-                if (IsValidBaanBOM())
-                {
-                    hasRouting = true;
-                    ParseBaanBom();
-                }
-
-                else
-                {
-                    ClearData();
-                    MessageBox.Show("Not a valid BAAN BOM!\nPlease check your bom file and try again.", "BAAN BOM Format Error");
-                }
-                    
-            }
+            if (!string.IsNullOrEmpty(AssemblyName) && !string.IsNullOrEmpty(AssyDescription) && !string.IsNullOrEmpty(DateOfListing) && !string.IsNullOrEmpty(Rev) && BomMap.Count > 0)
+                IsValid = true;
             else
-            {
-                ParseBomExplosion();
-            }
+                IsValid = false;
         }
 
-        private void ParseBaanBom()
-        {
-            BaanBomParserFactory factory = new BaanBomParserFactory(FullFilePath);
-            BaanBOMParser baanparser = null;
-            if (factory != null)
-                baanparser = (BaanBOMParser)factory.GetFileParser();         
-            else
-                MessageBox.Show("BAAN BOM Parsing Failed", "BOMExplosionParser.ParseBAANBom()");
-            string assy = baanparser.AssemblyName;
-            string desc = baanparser.Description;
-        }
-
-        private void ParseBomExplosion()
+        private void ReadBomExplosion()
         {
             Excel.Application xlApp = new Excel.Application();
             Excel.Workbook xlWorkbook = xlApp.Workbooks.Open(FullFilePath,
@@ -95,79 +99,106 @@ namespace Methods_Console
                 Marshal.ReleaseComObject(xlWorkbook);
                 xlApp.Quit();
                 Marshal.ReleaseComObject(xlApp);
+                MessageBox.Show("Problem loading BOM. Please check the file and try again.\n" + e.Message, "ParseBomExplosion()", MessageBoxButton.OK, MessageBoxImage.Error);
                 ClearData();
-                MessageBox.Show("Problem loading BOM. Please check the file and try again.\n" + e.Message, "ParseBomExplosion()");
-            }
-
-            //Determine whether it's a legit csv or excel bom explosion and send it to the correct method
-            string strCsv = null;
-            string strExcel = null;
-            if (ValueArray[1,1] != null)
-            {
-                string[] strCsvArray = ValueArray[1, 1].ToString().Split();
-                strCsv = string.Join(" ", strCsvArray);
-            }
-            if (ValueArray[1,2] != null)
-            {
-                string[] strExcelArray = ValueArray[1, 2].ToString().Split();
-                strExcel = string.Join(" ", strExcelArray);
+                IsValid = false;
             }    
-            if (FileType.Equals(".xls") && strExcel.Equals("BOM Explosion Report"))
-                ProcessExcelBOM();
-            else if (FileType.Equals(".csv") && strCsv.Equals("BOM Explosion Report"))
-                 ProcessCsvBOM();
-            else
-            {
-                ClearData();
-                MessageBox.Show("Unrecognized file type. Please try again with BOM Explosion in .xls or .csv format, or a BAAN BOM in .txt format", "ParseBomExplosion()");
-            }       
         }
 
         private void ProcessExcelBOM()
         {
-
-            MessageBox.Show("Welcome to Excel BOM Processing!");
-        }
-
-        private void ProcessCsvBOM()
-        {
-
-            MessageBox.Show("ProcessCsvBOM() coming soon!", "Maybe...");
-        }
-
-        private bool IsValidBaanBOM()
-        {
-            bool isvalid = false;
-            bool hasbomline = false;
-            bool hasroutingline = false;
-            bool hasroutingitem = false;
+            int row = ProcessHeader();
+            ProcessBomItems(row);
             
-            string line;
-            Regex reBomLine = new Regex(@"BILLS OF MATERIAL\s+\(MULTILEVEL\)\s+\(WITH BOM QUANTITIES\)");
-            Regex reRoutingLine = new Regex(@"\(Including\sRouting\)");
-            Regex reRoutingItem = new Regex(@"Routing Item");
-            try
-            {
-                using (StreamReader sr = new StreamReader(FullFilePath))
-                {
-                    while ((line = sr.ReadLine()) != null)
-                    {
-                        if (reBomLine.Match(line).Success)
-                            hasbomline = true;
-                        if (reRoutingLine.Match(line).Success)
-                            hasroutingline = true;
-                        if (reRoutingItem.Match(line).Success)
-                            hasroutingitem = true;
-                    }
-                }
-                if (hasbomline && hasroutingline && hasroutingitem)
-                    isvalid = true;
-            }
-            catch (Exception e)
-            {
-                MessageBox.Show("Error reading BAAN BOM. Could not load BOM.\n" + e.Message, "IsValidBaanBOM()");
-            }
-            return isvalid;
         }
+        private void ProcessBomItems(int nFirstPartRow)
+        {
+            int row = nFirstPartRow;
+            string strPN = null, strDesc = null, strFindNum = null, strQty = null, strRefDes = null;
+            Regex reLevelOne = new Regex(@"\.\s1");
+            Regex rePart = new Regex(@"^Part\b");
+            while (row <= ValueArray.GetLength(0))
+            {
+                if(reLevelOne.Match(ValueArray[row, (int)Column.Level].ToString()).Success && rePart.Match(ValueArray[row, (int)Column.SubClass].ToString()).Success)
+                {
+                    strPN = ValueArray[row, (int)Column.BeiNum].ToString().Trim();
+                    strDesc = ValueArray[row, (int)Column.BeiDesc].ToString().Trim();
+                    strFindNum = ValueArray[row, (int)Column.FindNum].ToString().Trim();
+                    strQty = ValueArray[row, (int)Column.Quantity].ToString().Trim();
+                    if (ValueArray[row, (int)Column.RefDes] == null || string.IsNullOrWhiteSpace(ValueArray[row, (int)Column.RefDes].ToString()))
+                        strRefDes = "No Ref Des";
+                    else
+                        strRefDes = ValueArray[row, (int)Column.RefDes].ToString().Trim();
+
+                    BomMap.Add(strFindNum, new List<string> { strPN, strDesc, strRefDes, strQty });
+                }
+                ++row;
+            }
+
+        }
+        private int ProcessHeader()
+        {
+            int row = 1, col = 1;
+            string strLevel = null, strCellValue = null;
+            string[] arrTemp = null;
+            while (string.IsNullOrEmpty(strLevel))
+            {
+                if (ValueArray[row, col] == null || (string.IsNullOrWhiteSpace(ValueArray[row, col].ToString())))
+                {
+                    ++row;
+                    continue;
+                }                   
+                arrTemp = ValueArray[row, col].ToString().Split();
+                strCellValue = string.Join(" ", arrTemp).Trim();
+                if (strCellValue.Equals("Create Time:"))
+                {
+                    arrTemp = ValueArray[row, col + 1].ToString().Split();
+                    strCellValue = arrTemp[0];
+                    DateOfListing = strCellValue;
+                }
+                else if (strCellValue.Equals("Item Number:"))
+                {
+                    arrTemp = ValueArray[row, col + 1].ToString().Split();
+                    strCellValue = string.Join(" ", arrTemp);
+                    AssemblyName = strCellValue;
+                }
+                else if (strCellValue.Equals("Description:"))
+                {
+                    arrTemp = ValueArray[row, col + 1].ToString().Split();
+                    strCellValue = string.Join(" ", arrTemp);
+                    AssyDescription = strCellValue;
+                }
+                else if (strCellValue.Equals("Item Revision:"))
+                {
+                    arrTemp = ValueArray[row, col + 1].ToString().Split();
+                    strCellValue = arrTemp[0];
+                    Rev = strCellValue;
+                }
+                else if (strCellValue.Equals("Level"))
+                {
+                    strLevel = strCellValue;
+                }
+                ++row;
+            }
+            return row;
+        }
+
+        private bool IsValidBomExplosion()
+        {
+            bool isValid = false;
+            string strbomexp = null;
+            if (ValueArray[1, 1] != null)
+            {
+                string[] strCsvArray = ValueArray[1, 1].ToString().Split();
+                strbomexp = string.Join(" ", strCsvArray);
+            }
+            if (strbomexp.Equals("BOM Explosion Report"))
+                isValid = true;
+            else
+                IsValid = false;
+            return isValid;
+        }
+
+
     }
 }
