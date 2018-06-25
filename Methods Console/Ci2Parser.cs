@@ -24,6 +24,7 @@ namespace Methods_Console
         public string MainCircuitName { get; private set; }
         public string MachineName { get; set; }
         public string Pass { get; set; }
+        public string DateCreated { get; private set; }
         public bool IsValid { get; private set; }
         public List<string> Lines { get; private set; }
         public Dictionary<string, Dictionary<string, List<string>>> Refdesmap { get; private set; }
@@ -37,6 +38,7 @@ namespace Methods_Console
         {
             MachineName = "";
             Pass = "";
+            DateCreated = "";
             FileType = Path.GetExtension(path).ToLower();
             FullFilePath = path;
             CircuitCount = 1;
@@ -67,6 +69,7 @@ namespace Methods_Console
             MainCircuitName = null;
             MachineName = null;
             Pass = null;
+            DateCreated = null;
             Lines.Clear();
             Refdesmap.Clear();
             Feedermap.Clear();
@@ -431,15 +434,27 @@ namespace Methods_Console
             Regex reBoard = new Regex(@"\s+Circuit[\s:""]+Board");
             Regex reLength = new Regex(@"X""\s:\s""\d+\.\d+");
             Regex reWidth = new Regex(@"Y""\s:\s""\d+\.\d+");
+            Regex reDate = new Regex(@"^// Created on (\d{2}/\d{2}/\d{4})");
             List<string> widths = new List<string>();
             List<string> lengths = new List<string>();
             bool prognamefound = false;
             bool custdbfound = false;
             bool circuitcountfound = false;
+            bool datefound = false;
             try
             {
                 foreach (string line in Lines)
                 {
+                    if (datefound == false)
+                    {
+                        Match m = reDate.Match(line);
+                        if (m.Success)
+                        {
+                            DateCreated = m.Groups[1].Value;
+                            datefound = true;
+                            continue;
+                        }
+                    }
                     if (prognamefound == false)
                     {
                         prognamefound = FindProgramName(line);

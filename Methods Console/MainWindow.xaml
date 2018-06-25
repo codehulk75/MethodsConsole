@@ -16,6 +16,43 @@
             <Button x:Name="famcheckbutton" Content="Verify a Family" Height="22.5" Margin="12.798,0,49.515,0" Focusable="False" TabIndex="2" ToolTip="Use a group of Setup Sheets to determine if the group is a family." FontFamily="Arial" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Foreground="#FFFDF9F9" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalContentAlignment="Left" IsTabStop="False"/>
             <Button x:Name="themebutton" Content="Toggle Theme" Height="22.5" Margin="12.798,0,18.801,0" Focusable="False" TabIndex="2" FontFamily="Arial" Style="{StaticResource {x:Static ToolBar.ButtonStyleKey}}" Foreground="#FFFDF9F9" BorderThickness="0" Background="{x:Null}" BorderBrush="{x:Null}" HorizontalContentAlignment="Left" IsTabStop="False" Width="113.401" Click="button_theme_Click" Tag="Blend" MouseRightButtonDown="themebutton_MouseRightButtonDown" ToolTip="Change the color scheme of the Methods Console. Left Click to cycle through the Main Window colors. Right Click to cycle through the Status Bar/Window Accent colors."/>
         </StackPanel>
+        <TextBox x:Name="textBoxProg1" HorizontalAlignment="Left" Height="23" Margin="170,77,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg2" HorizontalAlignment="Left" Height="23" Margin="170,117,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg3" HorizontalAlignment="Left" Height="23" Margin="170,157,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg4" HorizontalAlignment="Left" Height="23" Margin="170,197,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg5" HorizontalAlignment="Left" Height="23" Margin="170,238,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg6" HorizontalAlignment="Left" Height="23" Margin="170,275,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg7" HorizontalAlignment="Left" Height="23" Margin="170,315,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <TextBox x:Name="textBoxProg8" HorizontalAlignment="Left" Height="23" Margin="170,355,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="460"/>
+        <ComboBox x:Name="comboBoxProg1" HorizontalAlignment="Left" Margin="730,77,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg1_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg2" HorizontalAlignment="Left" Margin="730,117,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg2_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg3" HorizontalAlignment="Left" Margin="730,157,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg3_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg4" HorizontalAlignment="Left" Margin="730,197,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg4_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg5" HorizontalAlignment="Left" Margin="730,238,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg5_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg6" HorizontalAlignment="Left" Margin="730,275,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg6_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg7" HorizontalAlignment="Left" Margin="730,315,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg7_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxProg8" HorizontalAlignment="Left" Margin="730,355,0,0" VerticalAlignment="Top" Width="60" Height="23" SelectionChanged="comboBoxProg8_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach1" HorizontalAlignment="Left" Margin="807,77,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach1_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach2" HorizontalAlignment="Left" Margin="807,117,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach2_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach3" HorizontalAlignment="Left" Margin="807,157,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach3_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach4" HorizontalAlignment="Left" Margin="807,197,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach4_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach5" HorizontalAlignment="Left" Margin="807,238,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach5_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach6" HorizontalAlignment="Left" Margin="807,275,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach6_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach7" HorizontalAlignment="Left" Margin="807,315,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach7_SelectionChanged"/>
+        <ComboBox x:Name="comboBoxMach8" HorizontalAlignment="Left" Margin="807,355,0,0" VerticalAlignment="Top" Width="75" Height="23" SelectionChanged="comboBoxMach8_SelectionChanged"/>
+        <Label x:Name="labelProg1" Content="" HorizontalAlignment="Left" Margin="645,77,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg2" Content="" HorizontalAlignment="Left" Margin="645,117,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg3" Content="" HorizontalAlignment="Left" Margin="645,157,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg4" Content="" HorizontalAlignment="Left" Margin="645,197,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg5" Content="" HorizontalAlignment="Left" Margin="645,238,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg6" Content="" HorizontalAlignment="Left" Margin="645,275,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg7" Content="" HorizontalAlignment="Left" Margin="645,315,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Label x:Name="labelProg8" Content="" HorizontalAlignment="Left" Margin="645,355,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
+        <Button x:Name="btnCreate" Content="Create" HorizontalAlignment="Left" Margin="807,50,0,0" VerticalAlignment="Top" Width="75" Click="btnCreate_Click"/>
+        <TextBox x:Name="tbLoadingInsOne" HorizontalAlignment="Left" Height="23" Margin="170,427,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="712" MaxLength="100" IsUndoEnabled="False" ToolTip="Type Loading Instructions for 1st Pass." AllowDrop="False"/>
+        <Label x:Name="labelLoadingOne" Content="Load 1st Pass" HorizontalAlignment="Left" Margin="63,424,0,0" VerticalAlignment="Top" Width="102" Foreground="White" ToolTip="Type Loading Instructions for 1st Pass."/>
+        <TextBox x:Name="tbLoadingInsTwo" HorizontalAlignment="Left" Height="23" Margin="170,458,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="712" MaxLength="100" IsUndoEnabled="False" ToolTip="Type Loading Instructions for 2nd Pass."/>
+        <Label x:Name="labelLoadingTwo" Content="Load 2nd Pass:" HorizontalAlignment="Left" Margin="63,455,0,0" VerticalAlignment="Top" Width="102" Foreground="White" ToolTip="Type Loading Instructions for 2nd Pass."/>
     </Grid>
     <modern:ModernWindow.StatusBar>
         <TextBlock VerticalAlignment="Center">Ready</TextBlock>

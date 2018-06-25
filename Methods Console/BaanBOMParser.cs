@@ -37,9 +37,7 @@ namespace Methods_Console
             RouteList = new List<string>();
             LoadBaanBom();
             ParseBaanBom();
-            SetValid();
- 
-            MessageBox.Show(string.Join("\n", RouteList.ToArray()), "Routing");          
+            SetValid();         
         }
 
         private void SetValid()
