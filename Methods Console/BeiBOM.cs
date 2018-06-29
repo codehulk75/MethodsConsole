@@ -14,6 +14,8 @@ namespace Methods_Console
         public string FileType { get; private set; }
         public string FileName { get; private set; }
         public string FullFilePath { get; private set; }
+        public string PrefixFile { get; private set; }
+        public List<string> Prefixes { get; private set; }
         public bool HasRouting { get; private set; }
         public bool IsValid { get; private set; }
         public string AssemblyName { get; private set; }
@@ -21,7 +23,11 @@ namespace Methods_Console
         public string AssyDescription { get; private set; }
         public string Rev { get; private set; }
         public List<string> RouteList { get; private set; }
-        public Dictionary<string, Tuple<string, string, string, string,string>> Bom { get; private set; } //Key = '<Findnum>:<Sequence>', Tuple.Item1=Part Number, Tuple.Item2=Operation, Tuple.Item3=Description, Tuple.Item4=comma-separated ref des's 
+
+        //
+        //Key = '<Findnum>:<Sequence>', Tuple.Item1=Part Number, Item2=Operation, Item3=Description, Item4=comma-separated ref des's, Item5=BOM qty
+        //-- Item2 (operation) is null for Agile BOMs
+        public Dictionary<string, Tuple<string, string, string, string,string>> Bom { get; private set; } 
 
 
         public BeiBOM(string strBomFile)
@@ -30,6 +36,8 @@ namespace Methods_Console
             FullFilePath = strBomFile;
             FileName = Path.GetFileName(FullFilePath);
             FileType = Path.GetExtension(strBomFile).ToLower();
+            PrefixFile = "Prefixes.ini";
+            Prefixes = GetPrefixes();
             Bom = new Dictionary<string, Tuple<string, string, string, string, string>>();
             HasRouting = false;
             if (FileType.Equals(".txt"))
@@ -53,7 +61,7 @@ namespace Methods_Console
                     RouteList = baanparser.RouteList;
                     foreach (var record in baanparser.BomMap)
                     {
-                        string pn = baanparser.BomMap[record.Key][0];
+                        string pn = StripPrefix(baanparser.BomMap[record.Key][0]);
                         string op = baanparser.BomMap[record.Key][1];
                         string desc = baanparser.BomMap[record.Key][2];
                         string refdes = baanparser.BomMap[record.Key][3];
@@ -87,7 +95,7 @@ namespace Methods_Console
                 Rev = agileparser.Rev;
                 foreach (var record in agileparser.BomMap)
                 {
-                    string pn = agileparser.BomMap[record.Key][0];
+                    string pn = StripPrefix(agileparser.BomMap[record.Key][0]);
                     string op = null;
                     string desc = agileparser.BomMap[record.Key][1];
                     string refdes = agileparser.BomMap[record.Key][2];
@@ -154,6 +162,42 @@ namespace Methods_Console
                 MessageBox.Show("Error reading BAAN BOM. Could not load BOM.\n" + e.Message, "IsValidBaanBOM()", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             return isvalid;
+        }
+        private List<string> GetPrefixes()
+        {
+            List<string> readlist = new List<string>();
+            using (StreamReader rd = new StreamReader(PrefixFile))
+            {
+                string line;
+                while ((line = rd.ReadLine()) != null)
+                {
+                    if (string.IsNullOrEmpty(line) || line.Length > 10 || line.StartsWith("#"))
+                        continue;
+                    readlist.Add(line);
+                }
+            }
+            return readlist.Distinct().ToList();
+        }
+        private string StripPrefix(string part)
+        {
+
+            string stripped = part;
+            try
+            {
+                foreach (string s in Prefixes)
+                {
+                    if (stripped.StartsWith(s))
+                    {
+                        stripped = stripped.Substring(s.Length, stripped.Length - s.Length);
+                        break;
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Inside StripPrefix()\n" + ex.Message);
+            }
+            return stripped;
         }
     }
 }

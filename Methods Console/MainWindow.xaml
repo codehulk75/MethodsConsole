@@ -48,7 +48,7 @@
         <Label x:Name="labelProg6" Content="" HorizontalAlignment="Left" Margin="645,275,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
         <Label x:Name="labelProg7" Content="" HorizontalAlignment="Left" Margin="645,315,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
         <Label x:Name="labelProg8" Content="" HorizontalAlignment="Left" Margin="645,355,0,0" VerticalAlignment="Top" Height="23" Width="80" Foreground="White"/>
-        <Button x:Name="btnCreate" Content="Create" HorizontalAlignment="Left" Margin="807,50,0,0" VerticalAlignment="Top" Width="75" Click="btnCreate_Click"/>
+        <Button x:Name="btnCreate" Content="Create" HorizontalAlignment="Left" Margin="170,40,0,0" VerticalAlignment="Top" Width="75" Click="btnCreate_Click"/>
         <TextBox x:Name="tbLoadingInsOne" HorizontalAlignment="Left" Height="23" Margin="170,427,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="712" MaxLength="100" IsUndoEnabled="False" ToolTip="Type Loading Instructions for 1st Pass." AllowDrop="False"/>
         <Label x:Name="labelLoadingOne" Content="Load 1st Pass" HorizontalAlignment="Left" Margin="63,424,0,0" VerticalAlignment="Top" Width="102" Foreground="White" ToolTip="Type Loading Instructions for 1st Pass."/>
         <TextBox x:Name="tbLoadingInsTwo" HorizontalAlignment="Left" Height="23" Margin="170,458,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="712" MaxLength="100" IsUndoEnabled="False" ToolTip="Type Loading Instructions for 2nd Pass."/>

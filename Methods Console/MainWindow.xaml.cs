@@ -214,9 +214,7 @@ namespace Methods_Console
             if (result == true)
             {
                 Bom = new BeiBOM(dlg.FileName);
-                if (Bom.IsValid)
-                    MessageBox.Show(Bom.FileName + " is a valid BOM.");
-                else
+                if (Bom.IsValid == false)
                     MessageBox.Show("Invalid BOM");
             }
         }
@@ -225,13 +223,12 @@ namespace Methods_Console
         {          
             Tuple<bool, List<string>, List<string>> tDetectInfo;
             tDetectInfo = AutoDetectExportInfo();
-            ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
-            PopulateUIBoxes();
             if (tDetectInfo.Item1 == false)
             {
                 MessageBox.Show("Add function for failed detection.", "HURRY UP!! No pressure...");
             }
-
+            ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
+            PopulateUIBoxes();
         }
 
         private void PopulateUIBoxes()
@@ -265,95 +262,8 @@ namespace Methods_Console
                 }
                 ++i;
             }
-
-        }
-        private void CreateBaanSetupSheet()
-        {
-            int iCurrentPageNum = 1;
-            string strSsFilePath = "C:\\BaaN-DAT\\" + Bom.AssemblyName + "_" + Bom.Rev + ".rtf";
-            CreateRtfDoc(strSsFilePath);
-            iCurrentPageNum = WriteProgramData(strSsFilePath);
-
-
-
-            RtfDocWriteLastLine(strSsFilePath, iCurrentPageNum);
         }
 
-        private void CreateRtfDoc(string strFilePath)
-        {
-            string strRtfFirstLine = @"{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}}\viewkind4\uc1\pard\tx2160\tx3600\tx4320\tx7200\margl360\margr360\margt360\margb360 {\f0\fs20";
-            string strInitialHeader = @"\tab Assembly:\tab " + Bom.AssemblyName + "\n"
-                       + @"\par \tab BOM Rev:\tab " + Bom.Rev + "\n"
-                       + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + "\n"
-                       + @"\par _______________________________________________________________________________________________" + "\n\n";                           
-            using (StreamWriter writer = new StreamWriter(strFilePath, false))
-            {
-                writer.WriteLine(strRtfFirstLine);
-                writer.WriteLine(strInitialHeader);
-            }
-            
-        }
-
-        private int WriteProgramData(string strFilePath)
-        {
-            int iCurrentPageNumber = 1;
-
-            foreach (Ci2Parser export in ExportList)
-            {
-                string strInstructions = tbLoadingInsOne.Text;
-                if (export.Pass.Equals(lstPasses[1]))
-                    strInstructions = tbLoadingInsTwo.Text;
-                WriteNewProgramHeader(strFilePath, export, strInstructions);
-            }
-
-            using (StreamWriter writer = new StreamWriter(strFilePath, true))
-            {
-                writer.WriteLine("BLAHHHH");
-            }
-            return iCurrentPageNumber;
-        }
-
-        private void WriteNewProgramHeader(string strFilePath, Ci2Parser ci2, string strLoadingInstructions)
-        {
-            string strNewProgramHeader = @"\par Program: " + ci2.ProgramName + @"\tab Date: " + ci2.DateCreated + @"\tab \tab " + ci2.MachineName + @"\tab Side: " + ci2.Pass + "\n"
-                                        + @"\par Loading Instructions: " + strLoadingInstructions + "\n"
-                                        + "\\par \n\\par Part Number\\tab Description\n"
-                                        + @"\par\tab Feeder\tab Qty\tab Reference Designators" + "\n"
-                                        + @"\par _______________________________________________________________________________________________" + "\n";
-            using (StreamWriter writer = new StreamWriter(strFilePath, true))
-            {
-                writer.WriteLine(strNewProgramHeader);
-                writer.WriteLine("\\par \\tab some progrm info....\n");
-            }
-
-        }
-
-        private int WriteMidProgramFooterHeader(string strFilePath, int iCurrentPageNum)
-        {
-            int i = iCurrentPageNum;
-            string strFooterHeader = "\n\\par\n"
-                                    + @"\par " + DateTime.Now.ToShortDateString() + @" \tab Page  " + iCurrentPageNum.ToString() + @" \tab Version " + thisProgramVersion.ToString() + @"\page \tab Assembly:\tab " + Bom.AssemblyName + "\n"
-                                    + @"\par \tab BOM Rev:\tab " + Bom.Rev + "\n"
-                                    + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + "\n"
-                                    + "\\par _______________________________________________________________________________________________\n\n";
-            using (StreamWriter writer = new StreamWriter(strFilePath, true))
-            {
-                writer.WriteLine(strFooterHeader);
-            }
-            return ++i;
-        }
-        private void RtfDocWriteLastLine(string strFilePath, int iLastPageNum)
-        {
-            string rtfLastLine = @"\par " + DateTime.Now.ToShortDateString() + @" \tab Page  " + iLastPageNum.ToString() + " \tab Version " + thisProgramVersion.ToString() + @"\page }}";
-            using (StreamWriter writer = new StreamWriter(strFilePath, true))
-            {
-                writer.WriteLine(rtfLastLine);
-            }
-        }
-        private void CreateAgileSetupSheet()
-        {
-
-        }
         private Tuple<bool, List<string>, List<string>> AutoDetectExportInfo()
         {
             //
@@ -445,10 +355,10 @@ namespace Methods_Console
 
         private void btnCreate_Click(object sender, RoutedEventArgs e)
         {
-            if (Bom.HasRouting)
-                CreateBaanSetupSheet();
-            else
-                CreateAgileSetupSheet();
+            List<string> lstLoadingInstructions = new List<string>(new string[] { tbLoadingInsOne.Text, tbLoadingInsTwo.Text });
+            SetupSheetGenerator setupSheet = new SetupSheetGenerator(Bom, ExportList, lstLoadingInstructions);
+            setupSheet.CreateSheet();
+
         }
 
         private void comboBoxMach1_SelectionChanged(object sender, SelectionChangedEventArgs e)

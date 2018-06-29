@@ -242,7 +242,7 @@ namespace Methods_Console
                             Feedermap[compid].Add(feeder);
                             Feedermap[compid].Add(slot);
                             Feedermap[compid].Add(track);
-                            Feedermap[compid].Add(rotation);//rotation field for tray parts
+                            Feedermap[compid].Add(rotation);
                         }
                         else
                         {
