@@ -159,18 +159,32 @@ namespace Methods_Console
                 if (exportcounter == 1)
                     CurrentLineNumber = 13;
                 List<string> lstPartInfo = PrepPartInfo(export);
-
-                    foreach(string part in lstPartInfo)
+                string[] arr = { "\n" };
+                for(int j=0; j < lstPartInfo.Count; ++j)
+                {
+                    string[] tempLines = lstPartInfo[j].Split(arr, StringSplitOptions.RemoveEmptyEntries);
+                    List<string> lstPartLines = new List<string>(tempLines);
+                    if (CurrentLineNumber >= EndOfPage - 3)//3 here represents length of data.  will need to change to length of ref des data
+                        WriteMidProgramFooterHeader();
+                    using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
-                        if (CurrentLineNumber >= EndOfPage - HeaderLength + 3)
+                        writer.WriteLine(lstPartLines[0]);
+                        lstPartLines.RemoveAt(0);
+                        writer.WriteLine(lstPartLines[0]);
+                        lstPartLines.RemoveAt(0);
+                        CurrentLineNumber += 2;
+                    }
+                    for(int i = 0; i < lstPartLines.Count; ++i)
+                    {
+                        if (CurrentLineNumber >= EndOfPage)
                             WriteMidProgramFooterHeader();
                         using (StreamWriter writer = new StreamWriter(FullPath, true))
                         {
-                            writer.WriteLine(part);
-                            CurrentLineNumber += 3;
+                            writer.WriteLine(lstPartLines[i]);
                         }
-
+                        ++CurrentLineNumber;
                     }
+                }
                 ++exportcounter;
             }
             MessageBox.Show("Done");               
@@ -183,17 +197,19 @@ namespace Methods_Console
             string desc = null;
             string slottrack = null;
             string feeder = null;
-            string refdes = null;
+            List<string> refdesInput = new List<string>();
+            string strRefDesLines = null;
             string strTemp = null;
+            string strQty = null;
+            
 
             //  Using LINQ to sort the feeder list by slot then by track, then working with returned copy
             var items = from pair in export.Feedermap
                         orderby Convert.ToInt32(pair.Value[1]), pair.Value[2] ascending
                         select pair;
-
-
             foreach (var part in items)
             {
+                string strTempLine = "";
                 partnum = part.Key;
                 feeder = part.Value[0];
                 
@@ -206,8 +222,40 @@ namespace Methods_Console
                     slottrack = part.Value[2];
                 else
                     slottrack = "SL " + part.Value[1] + " TK " + part.Value[2];
-                refdes = export.Refdesmap[part.Key].ElementAt(0).Value[0];
-                strTemp = @"\par " + part.Key + @"\tab " + desc + @"\tab " + feeder + "\n" + @"\par \tab " + slottrack + "\n" + @"\par";
+                refdesInput = export.Refdesmap[part.Key].ElementAt(0).Value;
+                refdesInput.Sort();
+                strQty = refdesInput.Count.ToString();
+                for (int i = 0; refdesInput.Count > 0 && strTempLine.Length + refdesInput[0].Length + 1 < 54; ++i)
+                {
+                    strTempLine = strTempLine + refdesInput[0] + ',';
+                    refdesInput.RemoveAt(0);
+                }
+                if (refdesInput.Count == 0)
+                    strTempLine = strTempLine.TrimEnd(',');
+                strTempLine += "\n";
+                strRefDesLines = strTempLine;
+                if( refdesInput.Count > 0)
+                {
+                    for (int i = 0; refdesInput.Count > 0; ++i)
+                    {
+                        strTempLine = "";
+                        for (int j = 0; refdesInput.Count > 0 && strTempLine.Length + refdesInput[0].Length + 1 < 58; ++j)
+                        {
+                            strTempLine += refdesInput[0] + ',';
+                            refdesInput.RemoveAt(0);                              
+                        }
+                        if (refdesInput.Count == 0)
+                            strTempLine = strTempLine.TrimEnd(',');
+                        strTempLine += "\n";
+                        strRefDesLines += @"\par \tab \tab \tab " + strTempLine;
+                    }
+
+
+                }
+
+
+
+                strTemp = @"\par " + part.Key + @"\tab " + desc + @"\tab " + feeder + "\n" + @"\par \tab " + slottrack  + @"\tab " + strQty + @"\tab " + strRefDesLines + "\n" + @"\par";
 
                 info.Add(strTemp);
             }
