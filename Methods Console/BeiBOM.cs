@@ -23,7 +23,8 @@ namespace Methods_Console
         public string AssyDescription { get; private set; }
         public string Rev { get; private set; }
         public List<string> RouteList { get; private set; }
-
+        public Dictionary<string, string> OpByRefDict { get; private set; }
+        
         //
         //Key = '<Findnum>:<Sequence>', Tuple.Item1=Part Number, Item2=Operation, Item3=Description, Item4=comma-separated ref des's, Item5=BOM qty
         //-- Item2 (operation) is null for Agile BOMs
@@ -39,6 +40,7 @@ namespace Methods_Console
             PrefixFile = "Prefixes.ini";
             Prefixes = GetPrefixes();
             Bom = new Dictionary<string, Tuple<string, string, string, string, string>>();
+            OpByRefDict = new Dictionary<string, string>();
             HasRouting = false;
             if (FileType.Equals(".txt"))
             {
@@ -59,6 +61,7 @@ namespace Methods_Console
                     DateOfListing = baanparser.DateOfListing;
                     Rev = baanparser.Rev;
                     RouteList = baanparser.RouteList;
+                    Regex reSpace = new Regex(@"\s+");
                     foreach (var record in baanparser.BomMap)
                     {
                         string pn = StripPrefix(baanparser.BomMap[record.Key][0]);
@@ -67,6 +70,18 @@ namespace Methods_Console
                         string refdes = baanparser.BomMap[record.Key][3];
                         string bomqty = baanparser.BomMap[record.Key][4];
                         Bom.Add(record.Key, Tuple.Create(pn, op, desc, refdes, bomqty));
+                        List<string> lstRds = new List<string>(refdes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries));
+                        
+                        foreach(string rd in lstRds)
+                        {
+                            if (!string.IsNullOrWhiteSpace(rd))
+                            {
+                                if (!OpByRefDict.ContainsKey(rd))
+                                    OpByRefDict.Add(rd, op + ":" + pn);
+                                else
+                                    OpByRefDict[rd] += "," + op + ":" + pn;
+                            }
+                        }
                     }
 
                     IsValid = baanparser.IsValid;
