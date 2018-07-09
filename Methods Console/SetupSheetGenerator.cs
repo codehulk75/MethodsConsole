@@ -75,66 +75,52 @@ namespace Methods_Console
         {
             List<string> lines = new List<string>();
             ///sort BOM  by pn
-            Dictionary<string, Tuple<string, string, string, string, string>> bomCopy = new Dictionary<string,Tuple<string, string, string, string, string>>(Bom.Bom);
             var sortedBom = from pair in Bom.Bom
                             orderby pair.Value.Item1 ascending
                             select pair;
             foreach (var bomItem in sortedBom)
             {
-                if (bomCopy.ContainsKey(bomItem.Key))
+                if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1) || PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
                 {
-                    List<Tuple<string, string, string, string, string>> bomLinesFound = FindInBom(bomItem.Value.Item1);
-                    if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1) || PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                    List<string> progRds = new List<string>();
+                    List<string> bomRds = new List<string>(bomItem.Value.Item4.Split(',').ToList());
+                    if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                        progRds.AddRange(PassOneProgramRdMap[bomItem.Value.Item1]);
+                    if(PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                        progRds.AddRange(PassTwoProgramRdMap[bomItem.Value.Item1]);
+                    foreach(string rd in progRds)
                     {
-                        List<string> progRds = new List<string>();
-                        List<string> bomRds = new List<string>();
-                        List<string> lstUnMatchedRds = new List<string>();
-                        if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1))
-                            progRds.AddRange(PassOneProgramRdMap[bomItem.Value.Item1]);
-                        if(PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
-                            progRds.AddRange(PassTwoProgramRdMap[bomItem.Value.Item1]);
-                        foreach(var bomline in bomLinesFound)
-                        {
-                            bomRds.AddRange(bomline.Item4.Split(',').ToList());
-                        }
-                        foreach(string rd in progRds)
-                        {
-                            if (bomRds.Contains(rd))
-                                bomRds.Remove(rd);
-                        }
-                        if(bomRds.Count > 0)
-                        {
-                            string pn = bomItem.Value.Item1;
-                            string qty = bomRds.Count.ToString();
-                            string rds = string.Join(",", bomRds);
-                            if (bomItem.Value.Item5.Equals("0"))
-                                rds = "Zero Qty";
-                            if (rds.Length > 58)
-                                rds = ChopRds(rds);
-                            lines.Add(@"\par " + pn + @"\tab  " + qty + @" \tab " + rds);
-                            lines.Add(@"\par ");
-                        }                          
-                    }                  
-                    else
+                        if (bomRds.Contains(rd))
+                            bomRds.Remove(rd);
+                    }
+                    if(bomRds.Count > 0)
                     {
                         string pn = bomItem.Value.Item1;
-                        string qty = bomItem.Value.Item5;
-                        string rds = bomItem.Value.Item4;
-                        if (qty.Equals("0"))
+                        string qty = bomRds.Count.ToString();
+                        string rds = string.Join(",", bomRds);
+                        if (bomItem.Value.Item5.Equals("0"))
                             rds = "Zero Qty";
                         if (rds.Length > 58)
                             rds = ChopRds(rds);
                         lines.Add(@"\par " + pn + @"\tab  " + qty + @" \tab " + rds);
                         lines.Add(@"\par ");
-                    }
-                    foreach(var entry in Bom.Bom)
-                    {
-                        if (entry.Value.Item1.Equals(bomItem.Value.Item1))
-                            bomCopy.Remove(entry.Key);
-                    }
+                    }                          
+                }                  
+                else
+                {
+                    string pn = bomItem.Value.Item1;
+                    string qty = bomItem.Value.Item5;
+                    string rds = bomItem.Value.Item4;
+                    if (qty.Equals("0"))
+                        rds = "Zero Qty";
+                    if (rds.Length > 58)
+                        rds = ChopRds(rds);
+                    lines.Add(@"\par " + pn + @"\tab  " + qty + @" \tab " + rds);
+                    lines.Add(@"\par ");
                 }
-
             }
+            ///Write results
+            ///
             foreach (string line in lines)
             {
                 if (CurrentLineNumber >= EndOfPage)
@@ -174,9 +160,11 @@ namespace Methods_Console
         private void WritePartsInProgramNotInBom()
         {
             List<string> lines = new List<string>();
+            ///populate any orphan program info from 1st pass programs
             foreach(var part in PassOneProgramRdMap)
             {
-                if(FindInBom(part.Key).Count == 0)
+                List<Tuple<string, string, string, string, string>> bomParts = FindInBom(part.Key);
+                if(bomParts.Count == 0)
                 {
                     string pn = part.Key;
                     string qty = part.Value.Count.ToString();
@@ -186,9 +174,68 @@ namespace Methods_Console
                     lines.Add(@"\par " + part.Key + @"\tab  " + part.Value.Count.ToString() + @" \tab " + rds);
                     lines.Add(@"\par ");
                 }
-
+                else
+                {
+                    List<string> progRds = new List<string>(part.Value);
+                    List<string> bomRds = new List<string>();
+                    foreach(var entry in bomParts)
+                    {
+                        bomRds.AddRange(entry.Item4.Split(',').ToList());
+                    }
+                    foreach(string rd in bomRds)
+                    {
+                        if (progRds.Contains(rd))
+                            progRds.Remove(rd);
+                    }
+                    if(progRds.Count > 0)
+                    {
+                        string rds = string.Join(",", progRds);
+                        if (rds.Length > 58)
+                            rds = ChopRds(rds);
+                        lines.Add(@"\par " + part.Key + @"\tab  " + progRds.Count.ToString() + @" \tab " + rds);
+                        lines.Add(@"\par ");
+                    }
+                }
             }
-            foreach(string line in lines)
+            ///repeat for 2nd pass programs
+            foreach (var part in PassTwoProgramRdMap)
+            {
+                List<Tuple<string, string, string, string, string>> bomParts = FindInBom(part.Key);
+                if (bomParts.Count == 0)
+                {
+                    string pn = part.Key;
+                    string qty = part.Value.Count.ToString();
+                    string rds = string.Join(",", part.Value);
+                    if (rds.Length > 58)
+                        rds = ChopRds(rds);
+                    lines.Add(@"\par " + part.Key + @"\tab  " + part.Value.Count.ToString() + @" \tab " + rds);
+                    lines.Add(@"\par ");
+                }
+                else
+                {
+                    List<string> progRds = new List<string>(part.Value);
+                    List<string> bomRds = new List<string>();
+                    foreach (var entry in bomParts)
+                    {
+                        bomRds.AddRange(entry.Item4.Split(',').ToList());
+                    }
+                    foreach (string rd in bomRds)
+                    {
+                        if (progRds.Contains(rd))
+                            progRds.Remove(rd);
+                    }
+                    if (progRds.Count > 0)
+                    {
+                        string rds = string.Join(",", progRds);
+                        if (rds.Length > 58)
+                            rds = ChopRds(rds);
+                        lines.Add(@"\par " + part.Key + @"\tab  " + progRds.Count.ToString() + @" \tab " + rds);
+                        lines.Add(@"\par ");
+                    }
+                }
+            }
+            ///write results
+            foreach (string line in lines)
             {
                 if (CurrentLineNumber >= EndOfPage)
                     WriteMidProgramFooterHeader();
