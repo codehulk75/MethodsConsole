@@ -24,6 +24,7 @@ namespace Methods_Console
         public string MainCircuitName { get; private set; }
         public string MachineName { get; set; }
         public string Pass { get; set; }
+        public string OpCode { get; set; }
         public string DateCreated { get; private set; }
         public bool IsValid { get; private set; }
         public List<string> Lines { get; private set; }
@@ -50,6 +51,7 @@ namespace Methods_Console
             BypassedRefDesMap = new Dictionary<string, Dictionary<string, List<string>>>();
             PlacementMap = new Dictionary<string, List<string>>();
             MainCircuitName = null;
+            OpCode = null;
             LoadFile();
             ParseFile();
             SetValid();
@@ -318,6 +320,7 @@ namespace Methods_Console
                     if (Refdesmap[pn].ContainsKey(circuitName))
                     {
                         Refdesmap[pn][circuitName].Add(rd);
+                        Refdesmap[pn][circuitName].Sort();
                     }
                     else
                     {
