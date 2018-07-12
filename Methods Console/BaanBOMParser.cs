@@ -184,6 +184,7 @@ namespace Methods_Console
                     }
 
                 }
+                BomMap.ElementAt(BomMap.Count - 1).Value[3] = BomMap.ElementAt(BomMap.Count - 1).Value[3].TrimEnd(',');
                 foreach(string key in BomMap.Keys)
                 {
                     if (BomMap[key][3].Equals(""))

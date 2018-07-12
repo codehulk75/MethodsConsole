@@ -140,8 +140,8 @@ namespace Methods_Console
             DateOfListing = null;
             AssyDescription = null;
             Rev = null;
-            RouteList.Clear();
-            Bom.Clear();
+            if(RouteList != null && RouteList.Count > 0) RouteList.Clear();
+            if(Bom != null && Bom.Count > 0) Bom.Clear();
          }
 
         private bool IsValidBaanBOM()

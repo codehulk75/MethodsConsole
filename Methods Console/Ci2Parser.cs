@@ -251,19 +251,6 @@ namespace Methods_Console
                             Feedermap.Add(compid, new List<string> { feeder, slot, track, rotation });
                         }
                     }
-                    //string s = string.Format("Feeder added for part # {0}.\nFeeder : {1}\nSlot: {2}\nTrack: {3}\nRotation : {4}", compid, Feedermap[compid][0], Feedermap[compid][1], Feedermap[compid][2], Feedermap[compid][3]);
-                    //MessageBox.Show(s);
-
-                    //for (int ctr = 1; ctr < match.Groups.Count; ctr++)
-                    //{
-                    //    MessageBox.Show("\tGroup " +  ctr.ToString() + " : " + match.Groups[ctr].Value.ToString());
-                    //    int captureCtr = 0;
-                    //    foreach (Capture capture in match.Groups[ctr].Captures)
-                    //    {
-                    //        MessageBox.Show("Capture " + captureCtr.ToString() + " : " + capture.Value);
-                    //        captureCtr++;
-                    //    }
-                    //}
                 }
             }
             catch (Exception)

@@ -35,7 +35,7 @@ namespace Methods_Console
         {
             CurrentLineNumber = 1;
             CurrentPageNumber = 1;
-            EndOfPage = 63;
+            EndOfPage = 62;
             HeaderLength = 6;
             ThisProgram = Assembly.GetEntryAssembly();
             ThisProgramName = ThisProgram.GetName();
@@ -848,44 +848,52 @@ namespace Methods_Console
             List<string> info = new List<string>();
             string partnum = null;
             string desc = null;
+            int slot = 0;
+            string track = null;
             string slottrack = null;
             string feeder = null;
             List<string> refdesInput = new List<string>();
             string strRefDesLines = null;
-            string strTemp = null;
-            string strQty = null;        
+            string strQty = null;
+            List<Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>> tupList = new List<Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>>();
+    
            
-            //  Using LINQ to sort the feeder list by slot then by track, then working with returned copy
-            var items = from pair in export.Feedermap
-                        orderby Convert.ToInt32(pair.Value[1]), pair.Value[2] ascending
-                        select pair;
-            foreach (var part in items)
+            foreach(var feederItem in export.Feedermap)
             {
                 string strTempLine = "";
-                partnum = part.Key;
-                feeder = part.Value[0];
-                
-                List<Tuple<string, string, string, string, string>> tBomInfo = FindInBom(part.Key);
+                partnum = feederItem.Key;
+                feeder = feederItem.Value[0];
+
+                List<Tuple<string, string, string, string, string>> tBomInfo = FindInBom(feederItem.Key);
                 if (tBomInfo.Count == 0)
                     desc = "*****PART NOT IN BOM*****";
                 else
                     desc = tBomInfo[0].Item3;
-                if (part.Value[0].Equals("PTF RR BTWN RAIL"))
-                    slottrack = part.Value[2];
+                if (feederItem.Value[0].Equals("PTF RR BTWN RAIL"))
+                {
+                    slottrack = feederItem.Value[2];
+                    slot = 75;
+                    track = feederItem.Value[2];
+                }                  
                 else
-                    slottrack = "SL " + part.Value[1] + " TK " + part.Value[2];
-                refdesInput = new List<string>(export.Refdesmap[part.Key].ElementAt(0).Value);           
+                {
+                    slottrack = "SL " + feederItem.Value[1] + " TK " + feederItem.Value[2];
+                    slot = Convert.ToInt32(feederItem.Value[1]);
+                    track = feederItem.Value[2];
+                }
+                    
+                refdesInput = new List<string>(export.Refdesmap[feederItem.Key].ElementAt(0).Value);
                 refdesInput.Sort();
                 strQty = refdesInput.Count.ToString();
                 for (int i = 0; refdesInput.Count > 0 && strTempLine.Length + refdesInput[0].Length + 1 < 54; ++i)
                 {
                     if (export.Pass.Equals(PassesList[0]))
                     {
-                        if(PassOneProgramRdMap.ContainsKey(partnum))
+                        if (PassOneProgramRdMap.ContainsKey(partnum))
                             PassOneProgramRdMap[partnum].Add(refdesInput[0]);
                         else
                             PassOneProgramRdMap.Add(partnum, new List<string>(new string[] { refdesInput[0] }));
-                    }                   
+                    }
                     else if (export.Pass.Equals(PassesList[1]))
                     {
                         if (PassTwoProgramRdMap.ContainsKey(partnum))
@@ -903,7 +911,7 @@ namespace Methods_Console
                 strTempLine += "\n";
                 strRefDesLines = strTempLine;
                 //rest of ref des lines
-                if( refdesInput.Count > 0)
+                if (refdesInput.Count > 0)
                 {
                     for (int i = 0; refdesInput.Count > 0; ++i)
                     {
@@ -935,12 +943,42 @@ namespace Methods_Console
                         strRefDesLines += @"\par \tab \tab \tab " + strTempLine;
                     }
                 }
+                //If part number has a duplicate feeder...break it off and add it to the list
+                KeyValuePair<int, string> kv = new KeyValuePair<int, string>(slot, track);
+                tupList.Add(new Tuple<string, string, string, string, string, string, KeyValuePair<int,string>>(feederItem.Key, desc, feeder, slottrack, strQty, strRefDesLines, kv));
+                if (feederItem.Value.Count > 4)
+                {
+                    for (int i = 4; i < feederItem.Value.Count; i += 4)
+                    {
+                        feeder = feederItem.Value[i];
+                        if (feederItem.Value[i].Equals("PTF RR BTWN RAIL"))
+                        {
+                            slottrack = feederItem.Value[i + 2];
+                            slot = 75;
+                            track = feederItem.Value[i+2];
+                        }
 
-                strTemp = @"\par " + part.Key + @"\tab " + desc + @"\tab " + feeder + "\n" + @"\par \tab " + slottrack  + @"\tab " + strQty + @"\tab " + strRefDesLines + "\n" + @"\par";
-
-                info.Add(strTemp);
+                        else
+                        {
+                            slottrack = "SL " + feederItem.Value[i + 1] + " TK " + feederItem.Value[i + 2];
+                            slot = Convert.ToInt32(feederItem.Value[i+1]);
+                            track = feederItem.Value[i+2];
+                        }
+                        KeyValuePair<int, string> kv2 = new KeyValuePair<int, string>(slot, track);    
+                        tupList.Add(new Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>(feederItem.Key, desc, feeder, slottrack, strQty, "~See Other Feeder", kv2));
+                        
+                    }
+                }
             }
-            
+            ///sort by slot,track and prepare lines for printing
+            var test = from tup in tupList
+                       orderby tup.Item7.Key, tup.Item7.Value ascending
+                       select tup;
+            foreach (var sortedItems in test)
+            {
+                string temp  = @"\par " + sortedItems.Item1 + @"\tab " + sortedItems.Item2 + @"\tab " + sortedItems.Item3 + "\n" + @"\par \tab " + sortedItems.Item4 + @"\tab " + sortedItems.Item5 + @"\tab " + sortedItems.Item6 + @"\par";
+                info.Add(temp);
+            }
             return info;
         }
 
