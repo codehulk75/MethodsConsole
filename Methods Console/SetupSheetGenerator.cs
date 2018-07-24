@@ -159,6 +159,7 @@ namespace Methods_Console
         }
         private void WritePartsInProgramNotInBom()
         {
+            
             List<string> lines = new List<string>();
             ///populate any orphan program info from 1st pass programs
             foreach(var part in PassOneProgramRdMap)
@@ -364,7 +365,10 @@ namespace Methods_Console
                     }
                     int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
                     int iprogqty = Convert.ToInt32(strProgramQty);
-                    iBomTotal += ibomqty;
+                    if (ibomqty == 0)
+                        ++iBomTotal;
+                    else
+                        iBomTotal += ibomqty;
                     iProgTotal += iprogqty;
                     if (ibomqty == 0 && iprogqty > 0)
                         strError = "<--Part not in BOM!!";
@@ -416,7 +420,7 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader();
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine(@"\par TOTAL\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
+                writer.WriteLine("\\par\n\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
             }
             CurrentLineNumber += 5;
         }

@@ -67,6 +67,9 @@
         <Button x:Name="btnRemoveProgram5" Content="-" HorizontalAlignment="Left" Margin="170,259,0,0" Width="20" Height="18" RenderTransformOrigin="0,-0.294" VerticalAlignment="Top" VerticalContentAlignment="Top" FontWeight="Bold" FontSize="18" BorderThickness="1,0,1,1" Padding="1,-7,1,1" Click="btnRemoveProgram5_Click"/>
         <Button x:Name="btnRemoveProgram6" Content="-" HorizontalAlignment="Left" Margin="170,300,0,0" Width="20" Height="18" RenderTransformOrigin="0,-0.294" VerticalAlignment="Top" VerticalContentAlignment="Top" FontWeight="Bold" FontSize="18" BorderThickness="1,0,1,1" Padding="1,-7,1,1" Click="btnRemoveProgram6_Click"/>
         <Button x:Name="btnRemoveProgram7" Content="-" HorizontalAlignment="Left" Margin="170,341,0,0" Width="20" Height="18" RenderTransformOrigin="0,-0.294" VerticalAlignment="Top" VerticalContentAlignment="Top" FontWeight="Bold" FontSize="18" BorderThickness="1,0,1,1" Padding="1,-7,1,1" Click="btnRemoveProgram7_Click"/>
+        <TextBox x:Name="textBoxBom" HorizontalAlignment="Left" Height="23" Margin="265,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="300" MouseDoubleClick="textBoxBom_MouseDoubleClick" Background="#FFE2E2E2"/>
+        <TextBox x:Name="textBoxBomRev" HorizontalAlignment="Left" Height="23" Margin="570,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="60" Background="#FFE2E2E2"/>
+        <TextBox x:Name="textBoxBomDate" HorizontalAlignment="Left" Height="23" Margin="645,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="80" Background="#FFE2E2E2"/>
     </Grid>
     <modern:ModernWindow.StatusBar>
         <TextBlock VerticalAlignment="Center">Ready</TextBlock>

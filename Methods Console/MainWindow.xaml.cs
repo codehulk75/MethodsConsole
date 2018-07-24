@@ -26,9 +26,7 @@ namespace Methods_Console
 
 
     public partial class MainWindow
-    {
-
-
+    { 
         int themenum = Properties.Settings.Default.WindowThemeNumber;
         int borderbrushnum = Properties.Settings.Default.StatusBarThemeNumber;
         Dictionary<int, string> themes = new Dictionary<int, string>();
@@ -51,7 +49,6 @@ namespace Methods_Console
             thisProgram = Assembly.GetEntryAssembly();
             thisProgramName = thisProgram.GetName();
             thisProgramVersion = thisProgramName.Version;
-
             InitializeComponent();
             InitializeThemeColors();
             try
@@ -68,6 +65,12 @@ namespace Methods_Console
             {
                 SetTheme(args.Theme, borderbrushnum);
             };
+            textBoxBom.IsReadOnly = true;
+            textBoxBomRev.IsReadOnly = true;
+            textBoxBomDate.IsReadOnly = true;
+            textBoxBom.Visibility = Visibility.Hidden;
+            textBoxBomRev.Visibility = Visibility.Hidden;
+            textBoxBomDate.Visibility = Visibility.Hidden;
             labelLoadingOne.Visibility = Visibility.Hidden;
             labelLoadingTwo.Visibility = Visibility.Hidden;
             tbLoadingInsOne.Visibility = Visibility.Hidden;
@@ -165,6 +168,44 @@ namespace Methods_Console
 
         private void ClearData()
         {
+            foreach(TextBox tb in lstProgTextBoxes)
+            {
+                tb.Clear();
+                tb.Visibility = Visibility.Hidden;
+            }
+            foreach (ComboBox cb in lstMachComboBoxes)
+            {
+                cb.Visibility = Visibility.Hidden;
+            }
+            foreach (ComboBox cb in lstProgComboBoxes)
+            {
+                cb.Visibility = Visibility.Hidden;
+            }
+            foreach (Label lbl in lstProgDateLabels)
+            {
+                lbl.Content = "";
+                lbl.Visibility = Visibility.Hidden;
+            }
+            foreach(Button btn in lstAddProgramButtons)
+            {
+                btn.Visibility = Visibility.Hidden;
+            }
+            foreach (Button btn in lstRemoveProgramButtons)
+            {
+                btn.Visibility = Visibility.Hidden;
+            }
+            textBoxBom.Clear();
+            textBoxBomRev.Clear();
+            textBoxBomDate.Clear();
+            tbLoadingInsOne.Clear();
+            tbLoadingInsTwo.Clear();
+            textBoxBom.Visibility = Visibility.Hidden;
+            textBoxBomRev.Visibility = Visibility.Hidden;
+            textBoxBomDate.Visibility = Visibility.Hidden;
+            labelLoadingOne.Visibility = Visibility.Hidden;
+            labelLoadingTwo.Visibility = Visibility.Hidden;
+            tbLoadingInsOne.Visibility = Visibility.Hidden;
+            tbLoadingInsTwo.Visibility = Visibility.Hidden;
             ExportList.Clear();
             Bom = null;
         }
@@ -238,9 +279,17 @@ namespace Methods_Console
             bool? result = dlg.ShowDialog();
             if (result == true)
             {
+                if (Bom != null)
+                    Bom = null;
                 Bom = new BeiBOM(dlg.FileName);
                 if (Bom.IsValid == false)
                     MessageBox.Show("Invalid BOM");
+                textBoxBom.Text = "Assembly: " + Bom.AssemblyName;
+                textBoxBomRev.Text = Bom.Rev;
+                textBoxBomDate.Text = Bom.DateOfListing;
+                textBoxBom.Visibility = Visibility.Visible;
+                textBoxBomRev.Visibility = Visibility.Visible;
+                textBoxBomDate.Visibility = Visibility.Visible;
             }
         }
 
@@ -270,11 +319,11 @@ namespace Methods_Console
         private void PopulateUIBoxes()
         {
             int i = 0;
+            bool bHasTwoPasses = false;
             btnCreate.Visibility = Visibility.Visible;
             labelLoadingOne.Visibility = Visibility.Visible;
-            labelLoadingTwo.Visibility = Visibility.Visible;
             tbLoadingInsOne.Visibility = Visibility.Visible;
-            tbLoadingInsTwo.Visibility = Visibility.Visible;
+
             foreach( Ci2Parser program in ExportList)
             {
                 lstProgTextBoxes[i].Text = program.ProgramName;
@@ -290,6 +339,7 @@ namespace Methods_Console
                 else if (program.Pass.Equals(lstPasses[1]))
                 {
                     lstProgComboBoxes[i].SelectedIndex = 1;
+                    bHasTwoPasses = true;
                 }
                 foreach(var item in dictMachines)
                 {
@@ -297,6 +347,11 @@ namespace Methods_Console
                         lstMachComboBoxes[i].SelectedIndex = item.Key;
                 }
                 ++i;
+            }
+            if(bHasTwoPasses == true)
+            {
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+                labelLoadingTwo.Visibility = Visibility.Visible;
             }
             if (ExportList.Count < 8 && ExportList.Count > 0)
                 lstAddProgramButtons[ExportList.Count - 1].Visibility = Visibility.Visible;
@@ -369,7 +424,7 @@ namespace Methods_Console
 
         private void setupsheetbutton_Click(object sender, RoutedEventArgs e)
         {
-            ClearData();
+            
             Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
             dlg.DefaultExt = ".ci2";
             dlg.Filter = "Universal Export|*.ci2|All Files|*.*";
@@ -378,6 +433,7 @@ namespace Methods_Console
             bool? result = dlg.ShowDialog();
             if (result == true)
             {
+                ClearData();
                 string[] files = dlg.FileNames;
                 if(files.Length > 8)
                 {
@@ -392,18 +448,17 @@ namespace Methods_Console
                     {
                         ExportList.Add(parser);
                     }
-                }             
+                }
+                LoadBOM();
+                PrepareSetupSheet();
             }
-            LoadBOM();
-            PrepareSetupSheet();
         }
 
         private void btnCreate_Click(object sender, RoutedEventArgs e)
         {
             List<string> lstLoadingInstructions = new List<string>(new string[] { tbLoadingInsOne.Text, tbLoadingInsTwo.Text });
             SetupSheetGenerator setupSheet = new SetupSheetGenerator(Bom, ExportList, lstLoadingInstructions);
-            setupSheet.CreateSheet();
-
+            setupSheet.CreateSheet();          
         }
 
         private void comboBoxMach1_SelectionChanged(object sender, SelectionChangedEventArgs e)
@@ -1028,5 +1083,11 @@ namespace Methods_Console
                 }
             }
         }
+
+        private void textBoxBom_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            LoadBOM();
+        }
+
     }
 }
