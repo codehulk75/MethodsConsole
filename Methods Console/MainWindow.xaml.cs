@@ -76,6 +76,7 @@ namespace Methods_Console
             tbLoadingInsOne.Visibility = Visibility.Hidden;
             tbLoadingInsTwo.Visibility = Visibility.Hidden;
             btnCreate.Visibility = Visibility.Hidden;
+            btnFlipLine.Visibility = Visibility.Hidden;
             dictMachines.Add(0, "FZ60XC");
             dictMachines.Add(1, "GC-60_1");
             dictMachines.Add(2, "GC-60_2");
@@ -194,6 +195,8 @@ namespace Methods_Console
             {
                 btn.Visibility = Visibility.Hidden;
             }
+            btnCreate.Visibility = Visibility.Hidden;
+            btnFlipLine.Visibility = Visibility.Hidden;
             textBoxBom.Clear();
             textBoxBomRev.Clear();
             textBoxBomDate.Clear();
@@ -350,6 +353,7 @@ namespace Methods_Console
             }
             if(bHasTwoPasses == true)
             {
+                btnFlipLine.Visibility = Visibility.Visible;
                 tbLoadingInsTwo.Visibility = Visibility.Visible;
                 labelLoadingTwo.Visibility = Visibility.Visible;
             }
@@ -358,8 +362,38 @@ namespace Methods_Console
             if (ExportList.Count < 9 && ExportList.Count > 1)
                 lstRemoveProgramButtons[ExportList.Count - 2].Visibility = Visibility.Visible;
         }
-
-        private Tuple<bool, List<string>, List<string>> AutoDetectExportInfo()
+        private void SwapUIBoxes()
+        {
+            int i = 0;
+            string strCurrentPass = lstProgComboBoxes.First().Text;
+            if (strCurrentPass.Equals("SMT 1"))
+            {
+                ExportList = ExportList.OrderByDescending(p => p.Pass).ThenBy(m => m.MachineName).ToList();              
+            }
+            else if (strCurrentPass.Equals("SMT 2"))
+            {
+                ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
+            }
+            foreach(var export in ExportList)
+            {
+                export.Pass = (string)lstProgComboBoxes[i].SelectedValue;
+                lstProgTextBoxes[i].Text = export.ProgramName;
+                lstProgDateLabels[i].Content = export.DateCreated;
+                foreach (var item in dictMachines)
+                {
+                    if (export.MachineName.Equals(item.Value))
+                        lstMachComboBoxes[i].SelectedIndex = item.Key;
+                }
+                ++i;
+            }
+            if(tbLoadingInsOne.Visibility == Visibility.Visible && tbLoadingInsTwo.Visibility == Visibility.Visible)
+            {
+                string t = tbLoadingInsOne.Text;
+                tbLoadingInsOne.Text = tbLoadingInsTwo.Text;
+                tbLoadingInsTwo.Text = t;
+            }
+        }
+        private Tuple<bool, List<string>, List<string>> AutoDetectExportInfo(bool bDescending = false)
         {
             //
             //Try to auto detect Pass and machine name based on ci2 file name
@@ -380,11 +414,17 @@ namespace Methods_Console
                 string filename = parser.ProgramName;
                 if (reBot.IsMatch(filename))
                 {
-                    parser.Pass = lstPasses[0];
+                    if (bDescending == false)
+                        parser.Pass = lstPasses[0];
+                    else
+                        parser.Pass = lstPasses[1];
                 }
                 else if (reTop.IsMatch(filename))
                 {
-                    parser.Pass = lstPasses[1];
+                    if (bDescending == false)
+                        parser.Pass = lstPasses[1];
+                    else
+                        parser.Pass = lstPasses[0];
                 }
                 else
                 {
@@ -513,48 +553,176 @@ namespace Methods_Console
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 0)
                 ExportList[0].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg2_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 1)
                 ExportList[1].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg3_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 2)
                 ExportList[2].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg4_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 3)
                 ExportList[3].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg5_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 4)
                 ExportList[4].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg6_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 5)
                 ExportList[5].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg7_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 6)
                 ExportList[6].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void comboBoxProg8_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if ((sender as ComboBox).Visibility == Visibility.Visible && ExportList.Count > 7)
                 ExportList[7].Pass = (sender as ComboBox).SelectedItem.ToString();
+            bool bTwoPasses = false;
+            foreach (var cb in lstProgComboBoxes)
+            {
+                if (cb.Visibility == Visibility.Visible && cb.SelectedIndex == 1)
+                    bTwoPasses = true;
+            }
+            if (bTwoPasses)
+            {
+                labelLoadingTwo.Visibility = Visibility.Visible;
+                tbLoadingInsTwo.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                labelLoadingTwo.Visibility = Visibility.Hidden;
+                tbLoadingInsTwo.Visibility = Visibility.Hidden;
+            }
         }
 
         private void btnAdd1_Click(object sender, RoutedEventArgs e)
@@ -1089,5 +1257,9 @@ namespace Methods_Console
             LoadBOM();
         }
 
+        private void btnFlipLine_Click(object sender, RoutedEventArgs e)
+        {
+            SwapUIBoxes();
+        }
     }
 }

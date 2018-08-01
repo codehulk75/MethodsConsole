@@ -52,18 +52,41 @@ namespace Methods_Console
             FullPath = System.IO.Path.Combine(OutputDir, FileName);
         }
 
-
+        public void CreateSheet()
+        {
+            if (Bom.HasRouting)
+                CreateBaanSetupSheet();
+            else
+                CreateAgileSetupSheet();
+        }
 
         public void CreateBaanSetupSheet()
         {
             CreateRtfDoc();
             WriteProgramData();
-            WriteMidProgramFooterHeader();
+            WriteMidProgramFooterHeader(true);
             WriteRefDesCountHeader();
             WriteRefDesCountData();
-            WriteMidProgramFooterHeader();
+            WriteMidProgramFooterHeader(true);
             WriteDupPartsHeader();
-            WriteMidProgramFooterHeader();
+            WriteMidProgramFooterHeader(true);
+            WriteUnassocRefDesHeader();
+            WritePartsInProgramNotInBom();
+            WritePartsInBomNotInProgramHeader();
+            WritePartsInBomNotInProgramData();
+            RtfDocWriteLastLine();
+            MessageBox.Show("Done");
+        }
+        private void CreateAgileSetupSheet()
+        {
+            CreateRtfDoc();
+            WriteProgramData();
+            WriteMidProgramFooterHeader(true);
+            WriteRefDesCountHeader();
+            WriteAgileRefDesCountData();
+            WriteMidProgramFooterHeader(true);
+            WriteDupPartsHeader();
+            WriteMidProgramFooterHeader(true);
             WriteUnassocRefDesHeader();
             WritePartsInProgramNotInBom();
             WritePartsInBomNotInProgramHeader();
@@ -124,7 +147,7 @@ namespace Methods_Console
             foreach (string line in lines)
             {
                 if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader();
+                    WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
                     writer.WriteLine(line);
@@ -135,7 +158,7 @@ namespace Methods_Console
         private void WritePartsInBomNotInProgramHeader()
         {
             if (CurrentLineNumber >= EndOfPage)
-                WriteMidProgramFooterHeader();
+                WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine("\\par Parts in BOM, not in Program\n"
@@ -147,7 +170,7 @@ namespace Methods_Console
         private void WriteUnassocRefDesHeader()
         {
             if (CurrentLineNumber >= EndOfPage)
-                WriteMidProgramFooterHeader();
+                WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine("\\par \\tab UNASSOCIATED REFERENCE DESIGNATORS \n\\par\n"
@@ -158,48 +181,30 @@ namespace Methods_Console
             }
         }
         private void WritePartsInProgramNotInBom()
-        {
-            
+        {           
             List<string> lines = new List<string>();
-            ///populate any orphan program info from 1st pass programs
-            foreach(var part in PassOneProgramRdMap)
+            lines.AddRange(FindInProgNotinBom(PassOneProgramRdMap));
+            lines.AddRange(FindInProgNotinBom(PassTwoProgramRdMap));
+
+            foreach (string line in lines)
             {
-                List<Tuple<string, string, string, string, string>> bomParts = FindInBom(part.Key);
-                if(bomParts.Count == 0)
+                if (CurrentLineNumber >= EndOfPage)
+                    WriteMidProgramFooterHeader(true);
+                using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
-                    string pn = part.Key;
-                    string qty = part.Value.Count.ToString();
-                    string rds = string.Join(",", part.Value);
-                    if (rds.Length > 58)
-                        rds = ChopRds(rds);
-                    lines.Add(@"\par " + part.Key + @"\tab  " + part.Value.Count.ToString() + @" \tab " + rds);
-                    lines.Add(@"\par ");
+                    writer.WriteLine(line);
                 }
-                else
-                {
-                    List<string> progRds = new List<string>(part.Value);
-                    List<string> bomRds = new List<string>();
-                    foreach(var entry in bomParts)
-                    {
-                        bomRds.AddRange(entry.Item4.Split(',').ToList());
-                    }
-                    foreach(string rd in bomRds)
-                    {
-                        if (progRds.Contains(rd))
-                            progRds.Remove(rd);
-                    }
-                    if(progRds.Count > 0)
-                    {
-                        string rds = string.Join(",", progRds);
-                        if (rds.Length > 58)
-                            rds = ChopRds(rds);
-                        lines.Add(@"\par " + part.Key + @"\tab  " + progRds.Count.ToString() + @" \tab " + rds);
-                        lines.Add(@"\par ");
-                    }
-                }
+                ++CurrentLineNumber;
             }
-            ///repeat for 2nd pass programs
-            foreach (var part in PassTwoProgramRdMap)
+            using (StreamWriter writer = new StreamWriter(FullPath, true))
+            {
+                writer.WriteLine("\\par");
+            }
+        }
+        private List<string> FindInProgNotinBom(Dictionary<string,List<string>> progMap)
+        {
+            List<string> lstNotInBom = new List<string>();
+            foreach (var part in progMap)
             {
                 List<Tuple<string, string, string, string, string>> bomParts = FindInBom(part.Key);
                 if (bomParts.Count == 0)
@@ -209,8 +214,8 @@ namespace Methods_Console
                     string rds = string.Join(",", part.Value);
                     if (rds.Length > 58)
                         rds = ChopRds(rds);
-                    lines.Add(@"\par " + part.Key + @"\tab  " + part.Value.Count.ToString() + @" \tab " + rds);
-                    lines.Add(@"\par ");
+                    lstNotInBom.Add(@"\par " + part.Key + @"\tab  " + part.Value.Count.ToString() + @" \tab " + rds);
+                    lstNotInBom.Add(@"\par ");
                 }
                 else
                 {
@@ -230,27 +235,12 @@ namespace Methods_Console
                         string rds = string.Join(",", progRds);
                         if (rds.Length > 58)
                             rds = ChopRds(rds);
-                        lines.Add(@"\par " + part.Key + @"\tab  " + progRds.Count.ToString() + @" \tab " + rds);
-                        lines.Add(@"\par ");
+                        lstNotInBom.Add(@"\par " + part.Key + @"\tab  " + progRds.Count.ToString() + @" \tab " + rds);
+                        lstNotInBom.Add(@"\par ");
                     }
                 }
             }
-            ///write results
-            foreach (string line in lines)
-            {
-                if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader();
-                using (StreamWriter writer = new StreamWriter(FullPath, true))
-                {
-                    writer.WriteLine(line);
-                }
-                ++CurrentLineNumber;
-            }
-            using (StreamWriter writer = new StreamWriter(FullPath, true))
-            {
-                writer.WriteLine("\\par");
-            }
-
+            return lstNotInBom;
         }
         private string ChopRds(string rds)
         {
@@ -292,7 +282,7 @@ namespace Methods_Console
             ///LOOK INTO WHAT HE WAS TRYING TO DO HERE...(DUP CI2 REF DES'S???
             ///
             if (CurrentLineNumber >= EndOfPage)
-                WriteMidProgramFooterHeader();
+                WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine("\\par No Duplicate Parts in report! \n\\par _______________________________________________________________________________________________\n");
@@ -304,7 +294,7 @@ namespace Methods_Console
         {
             Regex reFirstPass = new Regex(@"(smt 1(?!.*inspect)|smt first)", RegexOptions.IgnoreCase);
             Regex reSecondPass = new Regex(@"(smt 2(?!.*inspect)|smt second)", RegexOptions.IgnoreCase);
-            Dictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
+            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
             int iBomTotal= 0, iProgTotal = 0;
             ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
             KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = BomItemsByRouteStep["0"];
@@ -336,7 +326,7 @@ namespace Methods_Console
                 List<string> lstMasterPartList = new List<string>(hMasterPartsList.ToList());
                 lstMasterPartList.Sort();
                 if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader();
+                    WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
                     writer.WriteLine(@"\par " + strRouteStepDesc + "\n" + @"\par Part Number\tab BOM\tab Program"+"\n" + "\\par ");
@@ -373,11 +363,11 @@ namespace Methods_Console
                     if (ibomqty == 0 && iprogqty > 0)
                         strError = "<--Part not in BOM!!";
                     else if (ibomqty > 0 && iprogqty == 0 && routeStep.Value.Key.Contains("SMT"))
-                        strError = "<--Hand Place";
+                        strError = "<--HANDPLACE";
                     else if (ibomqty != iprogqty && routeStep.Value.Key.Contains("SMT"))
                         strError = "<--Count";
                     if (CurrentLineNumber >= EndOfPage)
-                        WriteMidProgramFooterHeader();
+                        WriteMidProgramFooterHeader(true);
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
                         writer.WriteLine(@"\par " + part + @"\tab  " + ibomqty.ToString() + " \\tab  " + strProgramQty + " \\tab " + strError + " ");
@@ -393,7 +383,7 @@ namespace Methods_Console
             }
             //write the zero qyts.......
             if (CurrentLineNumber >= EndOfPage)
-                WriteMidProgramFooterHeader();
+                WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine("\\par " + NoRouteStepParts.Key + "\n" + @"\par Part Number\tab BOM\tab Program" + "\n" + "\\par ");
@@ -407,7 +397,7 @@ namespace Methods_Console
                 int iprogqty = 0;
                 ++iBomTotal;
                 if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader();
+                    WriteMidProgramFooterHeader(false);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
                     writer.WriteLine(@"\par " + part.Item1 + @"\tab  " + ibomqty.ToString() + " \\tab  " + iprogqty.ToString() + " \\tab ");
@@ -417,7 +407,7 @@ namespace Methods_Console
             ///write the total counts
             ///
             if (CurrentLineNumber >= EndOfPage - 5)
-                WriteMidProgramFooterHeader();
+                WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine("\\par\n\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
@@ -425,11 +415,11 @@ namespace Methods_Console
             CurrentLineNumber += 5;
         }
 
-        private Dictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>  PopulateRouteBom()
+        private SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>  PopulateRouteBom()
         {
             ///Go through all the routing steps and keep the ones that have Ops assigned to them
             ///key = routeOpNumber , value = keyvalpair(key = routeOpDesc, value = List of Tuple(partnum, refDesString, bomqty)
-            Dictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new Dictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>();
+            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>();
             KeyValuePair<string, List<Tuple<string, string,string>>> zeroqtyStep = new KeyValuePair<string, List<Tuple<string, string,string>>>("Parts not assigned to a routing step.", new List<Tuple<string, string, string>>());
             RouteMap.Add("0", zeroqtyStep);
             foreach (var routeStep in Bom.RouteList)
@@ -464,15 +454,7 @@ namespace Methods_Console
             CurrentLineNumber = 14;
         }
 
-        public void CreateSheet()
-        {
-            if (Bom.HasRouting)
-                CreateBaanSetupSheet();
-            else
-                CreateAgileSetupSheet();
-        }
-
-        private void WriteNewProgramHeader(Ci2Parser ci2, string strLoadingInstructions)
+        private string WriteNewProgramHeader(Ci2Parser ci2, string strLoadingInstructions, bool bWrite)
         {
             string strNewProgramHeader = @"\par Program: " + ci2.ProgramName + @"\tab Date: " + ci2.DateCreated + @"\tab \tab " + ci2.MachineName + @"\tab Side: " + ci2.Pass + "\n"
                                         + @"\par Loading Instructions: " + strLoadingInstructions + "\n"
@@ -482,12 +464,14 @@ namespace Methods_Console
                                         + @"\par _______________________________________________________________________________________________";
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine(strNewProgramHeader);
+                if (bWrite == true)
+                    writer.WriteLine(strNewProgramHeader);
             }
             CurrentLineNumber = 10;
+            return strNewProgramHeader;
         }
 
-        private void WriteMidProgramFooterHeader()
+        private string WriteMidProgramFooterHeader(bool bWrite)
         {
             string strFooterHeader = "\n\\par\n"
                                     + @"\par " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + @" \tab Page  " + CurrentPageNumber.ToString() + @" \tab Version " + ThisProgramVersion.ToString() + @"\page \tab Assembly:\tab " + Bom.AssemblyName + "\n"
@@ -498,13 +482,16 @@ namespace Methods_Console
             {
                 while(CurrentLineNumber < EndOfPage)
                 {
-                    writer.WriteLine(@"\par");
+                    if (bWrite)
+                        writer.WriteLine(@"\par");
                     CurrentLineNumber++;
                 }
-                writer.WriteLine(strFooterHeader);
+                if (bWrite)
+                    writer.WriteLine(strFooterHeader);
             }
             ++CurrentPageNumber;
             CurrentLineNumber = 7;
+            return strFooterHeader;
         }
         private void RtfDocWriteLastLine()
         {
@@ -519,10 +506,7 @@ namespace Methods_Console
                 writer.WriteLine(rtfLastLine);
             }
         }
-        private void CreateAgileSetupSheet()
-        {
 
-        }
         public void CreateRtfDoc()
         {
             string strRtfFirstLine = @"{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}}\viewkind4\uc1\pard\tx2160\tx3600\tx4320\tx7200\margl360\margr360\margt360\margb360 {\f0\fs20";
@@ -556,7 +540,7 @@ namespace Methods_Console
         private void WriteHandPlaceOneSection()
         {
             List<string> lstHpOneLines = PrepHpInfo(PassesList[0]);
-            WriteMidProgramFooterHeader();
+            WriteMidProgramFooterHeader(true);
             WriteHandPlaceHeader(PassesList[0]);
             CurrentLineNumber = 13;
             string[] arr = { "\n" };
@@ -564,8 +548,8 @@ namespace Methods_Console
             {
                 string[] tempLines = lstHpOneLines[j].Split(arr, StringSplitOptions.RemoveEmptyEntries);
                 List<string> lstPartLines = new List<string>(tempLines);
-                if (CurrentLineNumber >= EndOfPage - 3)//3 here represents length of data.  will need to change to length of ref des data
-                    WriteMidProgramFooterHeader();
+                if (CurrentLineNumber >= EndOfPage - 3)
+                    WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
                     writer.WriteLine(lstPartLines[0]);
@@ -577,7 +561,7 @@ namespace Methods_Console
                 for (int i = 0; i < lstPartLines.Count; ++i)
                 {
                     if (CurrentLineNumber >= EndOfPage)
-                        WriteMidProgramFooterHeader();
+                        WriteMidProgramFooterHeader(true);
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
                         writer.WriteLine(lstPartLines[i]);
@@ -590,16 +574,16 @@ namespace Methods_Console
         private void WriteHandPlaceTwoSection()
         {
             List<string> lstHpOneLines = PrepHpInfo(PassesList[1]);
-            WriteMidProgramFooterHeader();
+            WriteMidProgramFooterHeader(true);
             WriteHandPlaceHeader(PassesList[1]);
             CurrentLineNumber = 13;
             string[] arr = { "\n" };
             for (int j = 0; j < lstHpOneLines.Count; ++j)
             {
-                string[] tempLines = lstHpOneLines[j].Split(arr, StringSplitOptions.RemoveEmptyEntries);
-                List<string> lstPartLines = new List<string>(tempLines);
+                List<string> lstPartLines = lstHpOneLines[j].Split(arr, StringSplitOptions.RemoveEmptyEntries).ToList();
+
                 if (CurrentLineNumber >= EndOfPage - 3)//3 here represents length of data.  will need to change to length of ref des data
-                    WriteMidProgramFooterHeader();
+                    WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
                     writer.WriteLine(lstPartLines[0]);
@@ -611,7 +595,7 @@ namespace Methods_Console
                 for (int i = 0; i < lstPartLines.Count; ++i)
                 {
                     if (CurrentLineNumber >= EndOfPage)
-                        WriteMidProgramFooterHeader();
+                        WriteMidProgramFooterHeader(true);
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
                         writer.WriteLine(lstPartLines[i]);
@@ -629,10 +613,12 @@ namespace Methods_Console
             Regex reOp = new Regex(@"\b" + strOpCode + @"\b:([^,]+|\b)");
             foreach(var entry in OpByRefCopy)
             {
+                ///all refs were added to OpByRefCopy, but as they are writtent to output,
+                ///they are removed from OpByRefCopy, so remaining rds at each op are what we are calling Hand Place
                 MatchCollection matches = reOp.Matches(entry.Value);
                 foreach(Match match in matches)
                 {
-                    ///add to dictionary with pn as key and rd entry.Key as value, keep adding the refdes's
+                    ///add to dictionary with refdes as key and pn as value, pn's if there are multiple for that rd (ex: Multiple Part #'s with NO REF)
                     ///
                     if(dictHpParts.ContainsKey(entry.Key))
                         dictHpParts[entry.Key] += "," + match.Groups[1].Value;
@@ -768,29 +754,38 @@ namespace Methods_Console
             int exportcounter = 1;
             CurrentLineNumber = 6;
             bool bFirstPassHandWritten = false;
+            bool bAgile2ndPass = false;
             string strInstructions = null;
+            List<string> lst2ndPassParts = new List<string>();
+            string strNewProgMarker = "-new prog-";
             foreach (Ci2Parser export in ProgramList)
             {
-                
+                bAgile2ndPass = export.Pass.Equals(PassesList[1]) && !Bom.HasRouting;
                 if (export.Pass.Equals(PassesList[0]))
                 {
                     strInstructions = LoadingList[0];
-                    export.OpCode = GetOpCode(PassesList[0]);
-                    if (string.IsNullOrEmpty(export.OpCode))
+                    if (Bom.HasRouting)
                     {
                         export.OpCode = GetOpCode(PassesList[0]);
+                        if (string.IsNullOrEmpty(export.OpCode))
+                        {
+                            export.OpCode = GetOpCode(PassesList[0]);
+                        }
                     }
                 }
                 else if (export.Pass.Equals(PassesList[1]))
                 {
-                    if (string.IsNullOrEmpty(export.OpCode))
+                    strInstructions = LoadingList[1];
+                    if (Bom.HasRouting &&  string.IsNullOrEmpty(export.OpCode))
                     {
                         export.OpCode = GetOpCode(PassesList[1]);
-                    }
-                    strInstructions = LoadingList[1];
+                    }                 
                     if(bFirstPassHandWritten == false)
                     {
-                        WriteHandPlaceOneSection();
+                        if (Bom.HasRouting)
+                            WriteHandPlaceOneSection();
+                        else
+                            WriteMidProgramFooterHeader(true);
                         bFirstPassHandWritten = true;
                     }
                    
@@ -803,48 +798,98 @@ namespace Methods_Console
                         ////fill page with \par before starting new program                    
                         while (CurrentLineNumber <= EndOfPage)
                         {
-                            writer.WriteLine("\\par");
+                            if (!bAgile2ndPass)
+                                writer.WriteLine("\\par");
                             ++CurrentLineNumber;
-                        }
-                        /////                      
+                        }                   
                     }
-                    WriteMidProgramFooterHeader();
+                    if (!bAgile2ndPass)
+                        WriteMidProgramFooterHeader(true);
+                        
                 }
-
-
-                WriteNewProgramHeader(export, strInstructions);
+                if (!bAgile2ndPass)
+                    WriteNewProgramHeader(export, strInstructions, true);
+                else
+                {
+                    lst2ndPassParts.Add(strNewProgMarker);
+                    lst2ndPassParts.Add(WriteNewProgramHeader(export, strInstructions, false));
+                }
+                    
                 if (exportcounter == 1)
                     CurrentLineNumber = 13;
                 List<string> lstPartInfo = PrepPartInfo(export);
                 string[] arr = { "\n" };
-                for(int j=0; j < lstPartInfo.Count; ++j)
+                for (int j = 0; j < lstPartInfo.Count; ++j)
                 {
-                    string[] tempLines = lstPartInfo[j].Split(arr, StringSplitOptions.RemoveEmptyEntries);
-                    List<string> lstPartLines = new List<string>(tempLines);
+                    List<string> lstPartLines = lstPartInfo[j].Split(arr, StringSplitOptions.RemoveEmptyEntries).ToList();
+
                     if (CurrentLineNumber >= EndOfPage - 3)//3 here represents length of data.  will need to change to length of ref des data
-                        WriteMidProgramFooterHeader();
+                    {
+                        if (!bAgile2ndPass)
+                            WriteMidProgramFooterHeader(true);                           
+                    }
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
-                        writer.WriteLine(lstPartLines[0]);
+                        if (!bAgile2ndPass)
+                            writer.WriteLine(lstPartLines[0]);
+                        else
+                            lst2ndPassParts.Add(lstPartLines[0]);
                         lstPartLines.RemoveAt(0);
-                        writer.WriteLine(lstPartLines[0]);
+                        if (!bAgile2ndPass)
+                            writer.WriteLine(lstPartLines[0]);
+                        else
+                            lst2ndPassParts.Add(lstPartLines[0]);
                         lstPartLines.RemoveAt(0);
                         CurrentLineNumber += 2;
                     }
                     for(int i = 0; i < lstPartLines.Count; ++i)
                     {
                         if (CurrentLineNumber >= EndOfPage)
-                            WriteMidProgramFooterHeader();
+                        {
+                            if (!bAgile2ndPass)
+                                WriteMidProgramFooterHeader(true);                             
+                        }                         
                         using (StreamWriter writer = new StreamWriter(FullPath, true))
                         {
-                            writer.WriteLine(lstPartLines[i]);
+                            if (!bAgile2ndPass)
+                                writer.WriteLine(lstPartLines[i]);
+                            else
+                                lst2ndPassParts.Add(lstPartLines[i]);
                         }
                         ++CurrentLineNumber;
                     }
                 }
                 ++exportcounter;
             }
-            WriteHandPlaceTwoSection();               
+            if (bAgile2ndPass)
+            {
+                WriteAgileHpSection();
+                foreach(string line in lst2ndPassParts)
+                {
+                    if (line.Equals(strNewProgMarker))
+                    {
+                        WriteMidProgramFooterHeader(true);
+                        CurrentLineNumber = 9;
+                        continue;
+                    }                    
+                    else
+                    {
+                        if (CurrentLineNumber >= EndOfPage - 1)
+                        {
+                            WriteMidProgramFooterHeader(true);
+                        }
+                            using (StreamWriter writer = new StreamWriter(FullPath, true))
+                        {
+                            writer.WriteLine(line);
+                            ++CurrentLineNumber;
+                        }
+                    }
+                }                      
+                WriteMidProgramFooterHeader(true);
+                WriteHandPlaceHeader(PassesList[1]);
+            }
+            if(Bom.HasRouting)
+                WriteHandPlaceTwoSection();               
         }
 
         private List<string> PrepPartInfo(Ci2Parser export)
@@ -885,12 +930,14 @@ namespace Methods_Console
                     slot = Convert.ToInt32(feederItem.Value[1]);
                     track = feederItem.Value[2];
                 }
-                    
+                
+                //grab ref des's from first circuit found (ElementAt(0)).  Technically all circuits should match, but should add a check for this.    
                 refdesInput = new List<string>(export.Refdesmap[feederItem.Key].ElementAt(0).Value);
                 refdesInput.Sort();
                 strQty = refdesInput.Count.ToString();
                 for (int i = 0; refdesInput.Count > 0 && strTempLine.Length + refdesInput[0].Length + 1 < 54; ++i)
                 {
+                    //Populate ref des maps by Pass
                     if (export.Pass.Equals(PassesList[0]))
                     {
                         if (PassOneProgramRdMap.ContainsKey(partnum))
@@ -995,6 +1042,200 @@ namespace Methods_Console
                     bomPart.Add(bomitem.Value);
             }
             return bomPart;
+        }
+
+        private void WriteAgileHpSection()
+        {
+            WriteHandPlaceHeader(PassesList[0]);
+
+            //  look at WritePartsInBomNotInProgramData()
+            //      PassOneProgramRdMap
+            //            PassTwoProgramRdMap[partnum]
+            CurrentLineNumber = 13;
+            WriteAgileHpData();
+        }
+
+        private void WriteAgileHpData()
+        {
+            List<string> lines = new List<string>();
+            ///sort BOM  by pn
+            var sortedBom = from pair in Bom.Bom
+                            orderby pair.Value.Item1 ascending
+                            select pair;
+            foreach (var bomItem in sortedBom)
+            {
+                if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1) || PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                {
+                    List<string> progRds = new List<string>();
+                    List<string> bomRds = new List<string>(bomItem.Value.Item4.Split(',').ToList());
+                    if (PassOneProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                        progRds.AddRange(PassOneProgramRdMap[bomItem.Value.Item1]);
+                    if (PassTwoProgramRdMap.ContainsKey(bomItem.Value.Item1))
+                        progRds.AddRange(PassTwoProgramRdMap[bomItem.Value.Item1]);
+                    foreach (string rd in progRds)
+                    {
+                        if (bomRds.Contains(rd))
+                            bomRds.Remove(rd);
+                    }
+                    if (bomRds.Count > 0 && !bomItem.Value.Item5.Equals("0"))
+                    {
+                        string pn = bomItem.Value.Item1;
+                        string desc = bomItem.Value.Item3;
+                        string qty = bomRds.Count.ToString();
+                        string rds = string.Join(",", bomRds);                     
+                        if (rds.Length > 58)
+                            rds = ChopRds(rds);
+                        lines.Add(@"\par " + pn + @"\tab " + desc + @"\tab ");
+                        lines.Add(@"\par \tab Hand Place\tab " +qty + @"\tab " + rds);
+                        lines.Add(@"\par ");
+                    }
+                }
+                else if (!bomItem.Value.Item5.Equals("0"))
+                {
+                    string pn = bomItem.Value.Item1;
+                    string desc = bomItem.Value.Item3;
+                    string qty = bomItem.Value.Item5;
+                    string rds = bomItem.Value.Item4;
+                    if (rds.Length > 58)
+                        rds = ChopRds(rds);
+                    lines.Add(@"\par " + pn + @"\tab " + desc + @"\tab ");
+                    lines.Add(@"\par \tab Hand Place\tab " + qty + @"\tab " + rds);
+                    lines.Add(@"\par ");
+                }
+            }
+            ///Write results
+            ///
+            foreach (string line in lines)
+            {
+                if (CurrentLineNumber >= EndOfPage)
+                    WriteMidProgramFooterHeader(true);
+                using (StreamWriter writer = new StreamWriter(FullPath, true))
+                {
+                    writer.WriteLine(line);
+                }
+                ++CurrentLineNumber;
+            }
+        }
+
+        private void WriteAgileRefDesCountData()
+        {
+            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulatePseudoAgileRoute();
+            int iBomTotal = 0, iProgTotal = 0;
+            foreach(var routeStep in BomItemsByRouteStep)
+            {
+                HashSet<string> hMasterPartsList = new HashSet<string>();
+                string strRouteStepDesc = routeStep.Value.Key;
+                List<Tuple<string, string, string>> partInfo = routeStep.Value.Value.OrderBy(x => x.Item1).ToList();
+                foreach (var part in partInfo)
+                {
+                    hMasterPartsList.Add(part.Item1);
+                }
+                foreach (var export in ProgramList)
+                {
+                    foreach (var part in export.Refdesmap)
+                    {
+                        hMasterPartsList.Add(part.Key);
+                    }
+                }
+                List<string> lstMasterPartList = new List<string>(hMasterPartsList.ToList());
+                lstMasterPartList.Sort();
+                if (CurrentLineNumber >= EndOfPage)
+                    WriteMidProgramFooterHeader(true);
+                using (StreamWriter writer = new StreamWriter(FullPath, true))
+                {
+                    writer.WriteLine(@"\par " + strRouteStepDesc + "\n" + @"\par Part Number\tab BOM\tab Program" + "\n" + "\\par ");
+                    CurrentLineNumber += 3;
+                }
+                foreach (string part in lstMasterPartList)
+                {
+                    string strProgramQty = "0";
+                    string strError = "";
+                    List<string> bRds = new List<string>();
+                    List<string> pRds = new List<string>();
+                    Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+                    if (tBomPart != null)
+                        bRds = new List<string>(tBomPart.Item2.Split(',').OrderBy(x => x));
+
+                    foreach (Ci2Parser export in ProgramList)
+                    {
+                            if (export.Refdesmap.ContainsKey(part))
+                                pRds.AddRange(new List<string>(export.Refdesmap[part].ElementAt(0).Value.OrderBy(x => x))); 
+                    }
+                    strProgramQty = pRds.Count.ToString();
+                    pRds.Sort();
+                    if (!pRds.SequenceEqual(bRds))
+                    {
+                        strError = "<--Ref Des Mismatch!!";
+                    }
+                    int ibomqty = 0;
+                    if(tBomPart != null)
+                        ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
+                    int iprogqty = Convert.ToInt32(strProgramQty);
+                    if (ibomqty == 0)
+                        ++iBomTotal;
+                    else
+                        iBomTotal += ibomqty;
+                    iProgTotal += iprogqty;
+                    if (ibomqty == 0 && iprogqty > 0)
+                        strError = "<--Part not in BOM!!";
+                    else if (ibomqty > 0 && iprogqty == 0 && routeStep.Value.Key.Contains("SMT"))
+                        strError = "<--HANDPLACE";
+                    else if (ibomqty != iprogqty && routeStep.Value.Key.Contains("SMT"))
+                        strError = "<--Count";
+                    if (CurrentLineNumber >= EndOfPage)
+                        WriteMidProgramFooterHeader(true);
+                    using (StreamWriter writer = new StreamWriter(FullPath, true))
+                    {
+                        writer.WriteLine(@"\par " + part + @"\tab  " + ibomqty.ToString() + " \\tab  " + strProgramQty + " \\tab " + strError + " ");
+                    }
+                    ++CurrentLineNumber;
+                }
+                using (StreamWriter writer = new StreamWriter(FullPath, true))
+                {
+                    writer.WriteLine("\\par ");
+                }
+                ++CurrentLineNumber;
+            }
+            ///write the total counts
+            ///
+            if (CurrentLineNumber >= EndOfPage - 5)
+                WriteMidProgramFooterHeader(true);
+            using (StreamWriter writer = new StreamWriter(FullPath, true))
+            {
+                writer.WriteLine("\\par\n\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
+            }
+            CurrentLineNumber += 5;
+        }
+
+        private SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> PopulatePseudoAgileRoute()
+        {
+     
+            ///key = routeOpNumber , value = keyvalpair(key = routeOpDesc, value = List of Tuple(partnum, refDesString, bomqty)
+            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>();
+            KeyValuePair<string, List<Tuple<string, string, string>>> smtStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_SMT", new List<Tuple<string, string, string>>());
+            KeyValuePair<string, List<Tuple<string, string, string>>> postStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_POST", new List<Tuple<string, string, string>>());
+            KeyValuePair<string, List<Tuple<string, string, string>>> zeroqtyStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_ZERO_QTY", new List<Tuple<string, string, string>>());
+            RouteMap.Add("0", smtStep);
+            RouteMap.Add("1", postStep);
+            RouteMap.Add("2", zeroqtyStep);
+            foreach (var bomline in Bom.Bom)
+            {
+                if(!bomline.Value.Item4.Equals("NO REF") && !bomline.Value.Item5.Equals("0"))
+                    RouteMap["0"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
+                else if(bomline.Value.Item4.Equals("NO REF") && !bomline.Value.Item5.Equals("0"))
+                    RouteMap["1"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
+                else
+                    RouteMap["2"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
+            }
+            ///Before returning, remove the route steps with empty Lists in the key value pair
+            ///
+            List<string> routekeys = RouteMap.Keys.ToList();
+            foreach (var key in routekeys)
+            {
+                if (RouteMap[key].Value.Count < 1)
+                    RouteMap.Remove(key);
+            }
+            return RouteMap;
         }
     }
 }

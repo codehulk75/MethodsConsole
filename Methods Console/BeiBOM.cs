@@ -70,8 +70,8 @@ namespace Methods_Console
                         string refdes = baanparser.BomMap[record.Key][3];
                         string bomqty = baanparser.BomMap[record.Key][4];
                         Bom.Add(record.Key, Tuple.Create(pn, op, desc, refdes, bomqty));
-                        List<string> lstRds = new List<string>(refdes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries));
-                        
+
+                        List<string> lstRds = new List<string>(refdes.Split(new char[] {','}, StringSplitOptions.RemoveEmptyEntries));                      
                         foreach(string rd in lstRds)
                         {
                             if (!string.IsNullOrWhiteSpace(rd))
@@ -112,10 +112,22 @@ namespace Methods_Console
                 {
                     string pn = StripPrefix(agileparser.BomMap[record.Key][0]);
                     string op = null;
-                    string desc = agileparser.BomMap[record.Key][1];
+                    string desc = agileparser.BomMap[record.Key][1].Length <= 30 ? agileparser.BomMap[record.Key][1] : agileparser.BomMap[record.Key][1].Substring(0,30);
                     string refdes = agileparser.BomMap[record.Key][2];
                     string bomqty = agileparser.BomMap[record.Key][3];
                     Bom.Add(record.Key, Tuple.Create(pn, op, desc, refdes, bomqty));
+
+                    List<string> lstRds = new List<string>(refdes.Split(new char[] { ',' }, StringSplitOptions.RemoveEmptyEntries));
+                    foreach (string rd in lstRds)
+                    {
+                        if (!string.IsNullOrWhiteSpace(rd))
+                        {
+                            if (!OpByRefDict.ContainsKey(rd))
+                                OpByRefDict.Add(rd, "agile:" + pn);
+                            else
+                                OpByRefDict[rd] += "," + op + ":" + pn;
+                        }
+                    }
                 }
 
                 IsValid = agileparser.IsValid;
