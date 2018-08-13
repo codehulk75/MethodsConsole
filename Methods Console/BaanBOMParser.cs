@@ -85,11 +85,11 @@ namespace Methods_Console
 
         private void ParseBaanBom()
         {
-            Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s+([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
+            Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
             Regex reDate = new Regex(@"Date\s+:\s(\d{2}-\d{2}-\d{2})");
             Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
-            Regex reRev = new Regex(@"Revision\s+:\s+(\S+)");
+            Regex reRev = new Regex(@"Revision\s*:\s+(\S+)");
             Regex reRouteList = new Regex(@"^\s+\|\s+(\d{1,4})/\s+\d\s+\|\s+(\d{1,4})\s+\|(.*)\|\d{2}-\d{2}-\d{2}\s+\|\s+\|\s+\w+\s+\|\s+\|\s+\d{1,3}\s+\|\s+\d+\.\d+\s+\|\s+\d+\.\d+\s*\|\s+\|\r?$");
             Regex reDescription = new Regex(@"^Description\s+:\s+(.*)");
             bool bDateFound = false;
@@ -118,19 +118,9 @@ namespace Methods_Console
                         if (m.Success)
                         {
                             AssemblyName = m.Groups[1].Value;
-                            bAssemblyNameFound = true;
+                            bAssemblyNameFound = true;                         
                             continue;
                         }                          
-                    }
-                    if (bRevFound == false)
-                    {
-                        Match m = reRev.Match(line);
-                        if (m.Success)
-                        {
-                            Rev = m.Groups[1].Value;
-                            bRevFound = true;
-                            continue;
-                        }
                     }
                     if (bDescriptionFound == false)
                     {
@@ -139,6 +129,16 @@ namespace Methods_Console
                         {
                             AssyDescription = m.Groups[1].Value.TrimEnd();
                             bDescriptionFound = true;
+                            continue;
+                        }
+                    }
+                    if (bRevFound == false)
+                    {
+                        Match m = reRev.Match(line);
+                        if (m.Success)
+                        {
+                            Rev = m.Groups[1].Value;
+                            bRevFound = true;
                             continue;
                         }
                     }

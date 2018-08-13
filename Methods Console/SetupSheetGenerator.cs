@@ -31,6 +31,7 @@ namespace Methods_Console
         public string OutputDir { get; set; }
         public string FileName { get; private set; }
         public string FullPath { get; private set; }
+        public bool bHasTwoPasses { get; private set; }
         public SetupSheetGenerator(BeiBOM bom, List<Ci2Parser> ci2List, List<string> loadingInstructionsList)
         {
             CurrentLineNumber = 1;
@@ -50,6 +51,13 @@ namespace Methods_Console
             LoadingList = loadingInstructionsList;
             FileName = Bom.AssemblyName + "_" + Bom.Rev + ".rtf";
             FullPath = System.IO.Path.Combine(OutputDir, FileName);
+
+            HashSet<string> passHash = new HashSet<string>();
+            foreach(var ci2 in ProgramList)
+            {
+                passHash.Add(ci2.Pass);
+            }
+            bHasTwoPasses = passHash.Count > 1 ? true : false;
         }
 
         public void CreateSheet()
@@ -161,9 +169,9 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine("\\par Parts in BOM, not in Program\n"
-                    + "\\par\n\\par Part Number\\tab Qty\\tab Reference Designators\n"
-                    + "\\par _______________________________________________________________________________________________\n");
+                writer.WriteLine("\\par Parts in BOM, not in Program" + Environment.NewLine + ""
+                    + "\\par" + Environment.NewLine + "\\par Part Number\\tab Qty\\tab Reference Designators" + Environment.NewLine
+                    + "\\par _______________________________________________________________________________________________" + Environment.NewLine);
                 CurrentLineNumber += 4;
             }
         }
@@ -173,10 +181,10 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine("\\par \\tab UNASSOCIATED REFERENCE DESIGNATORS \n\\par\n"
-                    + "\\par Parts in Program, not in BOM\n"
-                    +"\\par \n\\par Part Number\\tab Qty\\tab Reference Designators\n"
-                    + "\\par _______________________________________________________________________________________________\n");
+                writer.WriteLine("\\par \\tab UNASSOCIATED REFERENCE DESIGNATORS " + Environment.NewLine + "\\par" + Environment.NewLine
+                    + "\\par Parts in Program, not in BOM" + Environment.NewLine
+                    +"\\par " + Environment.NewLine + "\\par Part Number\\tab Qty\\tab Reference Designators" + Environment.NewLine + ""
+                    + "\\par _______________________________________________________________________________________________" + Environment.NewLine);
                 CurrentLineNumber += 6;
             }
         }
@@ -270,11 +278,11 @@ namespace Methods_Console
                     }
                     if (refdesInput.Count == 0)
                         strTempLine = strTempLine.TrimEnd(',');
-                    strTempLine += "\n";
+                    strTempLine += "" + Environment.NewLine + "";
                     rdOutput.Add(@"\par \tab \tab " + strTempLine);
                 }
             }
-            strRds = string.Join("\n", rdOutput);
+            strRds = string.Join("" + Environment.NewLine + "", rdOutput);
             return strRds;
         }
         private void WriteDupPartsHeader()
@@ -285,141 +293,150 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine("\\par No Duplicate Parts in report! \n\\par _______________________________________________________________________________________________\n");
+                writer.WriteLine("\\par No Duplicate Parts in report! " + Environment.NewLine + "\\par _______________________________________________________________________________________________" + Environment.NewLine);
                 CurrentLineNumber += 2;
             }
         }
 
         private void WriteRefDesCountData()
         {
-            Regex reFirstPass = new Regex(@"(smt 1(?!.*inspect)|smt first)", RegexOptions.IgnoreCase);
-            Regex reSecondPass = new Regex(@"(smt 2(?!.*inspect)|smt second)", RegexOptions.IgnoreCase);
-            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
-            int iBomTotal= 0, iProgTotal = 0;
-            ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
-            KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = BomItemsByRouteStep["0"];
-            BomItemsByRouteStep.Remove("0");
-            foreach (var routeStep in BomItemsByRouteStep)
+            try
             {
-                HashSet<string> hMasterPartsList = new HashSet<string>();
-                
-                string strRouteStepDesc = routeStep.Value.Key;
-                if (reFirstPass.Match(strRouteStepDesc).Success)
-                    strRouteStepDesc = "SMT 1ST PASS";
-                else if (reSecondPass.Match(strRouteStepDesc).Success)
-                    strRouteStepDesc = "SMT 2ND PASS";
-                List<Tuple<string, string, string>> partInfo = routeStep.Value.Value.OrderBy(x => x.Item1).ToList();
-                foreach (var part in partInfo)
+                Regex reFirstPass = new Regex(@"(smt 1(?!.*inspect)|smt first)", RegexOptions.IgnoreCase);
+                Regex reSecondPass = new Regex(@"(smt 2(?!.*inspect)|smt second)", RegexOptions.IgnoreCase);
+                SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
+                int iBomTotal = 0, iProgTotal = 0;
+                ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
+                KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = BomItemsByRouteStep["0"];
+                BomItemsByRouteStep.Remove("0");
+                foreach (var routeStep in BomItemsByRouteStep)
                 {
-                    hMasterPartsList.Add(part.Item1);
-                }
-                foreach(var export in ProgramList)
-                {
-                    if (export.OpCode.Equals(routeStep.Key))
+                    HashSet<string> hMasterPartsList = new HashSet<string>();
+
+                    string strRouteStepDesc = routeStep.Value.Key;
+                    if (reFirstPass.Match(strRouteStepDesc).Success)
+                        strRouteStepDesc = "SMT 1ST PASS";
+                    else if (reSecondPass.Match(strRouteStepDesc).Success)
+                        strRouteStepDesc = "SMT 2ND PASS";
+                    List<Tuple<string, string, string>> partInfo = routeStep.Value.Value.OrderBy(x => x.Item1).ToList();
+                    foreach (var part in partInfo)
                     {
-                        foreach(var part in export.Refdesmap)
-                        {
-                            hMasterPartsList.Add(part.Key);
-                        }
+                        hMasterPartsList.Add(part.Item1);
                     }
-                }
-                List<string> lstMasterPartList = new List<string>(hMasterPartsList.ToList());
-                lstMasterPartList.Sort();
-                if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader(true);
-                using (StreamWriter writer = new StreamWriter(FullPath, true))
-                {
-                    writer.WriteLine(@"\par " + strRouteStepDesc + "\n" + @"\par Part Number\tab BOM\tab Program"+"\n" + "\\par ");
-                    CurrentLineNumber += 3;
-                }
-                foreach(string part in lstMasterPartList)
-                {
-                    string strProgramQty = "0";
-                    string strError = "";
-                    Tuple<string, string, string> tBomPart = partInfo.First(x => x.Item1.Equals(part));
-                    foreach(Ci2Parser export in ProgramList)
+                    foreach (var export in ProgramList)
                     {
-                        if(export.OpCode.Equals(routeStep.Key))
+                        if (export.OpCode.Equals(routeStep.Key))
                         {
-                            if (export.Refdesmap.ContainsKey(part))
+                            foreach (var part in export.Refdesmap)
                             {
-                                List<string> pRds = new List<string>(export.Refdesmap[part].ElementAt(0).Value.OrderBy(x => x));
-                                List<string> bRds = new List<string>(tBomPart.Item2.Split(',').OrderBy(x => x));
-                                strProgramQty = pRds.Count.ToString();
-                                if(!pRds.SequenceEqual(bRds))
-                                {
-                                    strError = "<--Ref Des Mismatch!!";
-                                }
+                                hMasterPartsList.Add(part.Key);
                             }
                         }
                     }
-                    int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
-                    int iprogqty = Convert.ToInt32(strProgramQty);
-                    if (ibomqty == 0)
-                        ++iBomTotal;
-                    else
-                        iBomTotal += ibomqty;
-                    iProgTotal += iprogqty;
-                    if (ibomqty == 0 && iprogqty > 0)
-                        strError = "<--Part not in BOM!!";
-                    else if (ibomqty > 0 && iprogqty == 0 && routeStep.Value.Key.Contains("SMT"))
-                        strError = "<--HANDPLACE";
-                    else if (ibomqty != iprogqty && routeStep.Value.Key.Contains("SMT"))
-                        strError = "<--Count";
+                    List<string> lstMasterPartList = new List<string>(hMasterPartsList.ToList());
+                    lstMasterPartList.Sort();
                     if (CurrentLineNumber >= EndOfPage)
                         WriteMidProgramFooterHeader(true);
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
-                        writer.WriteLine(@"\par " + part + @"\tab  " + ibomqty.ToString() + " \\tab  " + strProgramQty + " \\tab " + strError + " ");
+                        writer.WriteLine(@"\par " + strRouteStepDesc + "" + Environment.NewLine + "" + @"\par Part Number\tab BOM\tab Program" + "" + Environment.NewLine + "" + "\\par ");
+                        CurrentLineNumber += 3;
+                    }
+                    foreach (string part in lstMasterPartList)
+                    {
+                        string strProgramQty = "0";
+                        string strError = "";
+                        Tuple<string, string, string> tBomPart = partInfo.First(x => x.Item1.Equals(part));
+                        foreach (Ci2Parser export in ProgramList)
+                        {
+                            if (export.OpCode.Equals(routeStep.Key))
+                            {
+                                if (export.Refdesmap.ContainsKey(part))
+                                {
+                                    List<string> pRds = new List<string>(export.Refdesmap[part].ElementAt(0).Value.OrderBy(x => x));
+                                    List<string> bRds = new List<string>(tBomPart.Item2.Split(',').OrderBy(x => x));
+                                    strProgramQty = pRds.Count.ToString();
+                                    if (!pRds.SequenceEqual(bRds))
+                                    {
+                                        strError = "<--Ref Des Mismatch!!";
+                                    }
+                                }
+                            }
+                        }
+                        int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
+                        int iprogqty = Convert.ToInt32(strProgramQty);
+                        if (ibomqty == 0)
+                            ++iBomTotal;
+                        else
+                            iBomTotal += ibomqty;
+                        iProgTotal += iprogqty;
+                        if (ibomqty == 0 && iprogqty > 0)
+                            strError = "<--Part not in BOM!!";
+                        else if (ibomqty > 0 && iprogqty == 0 && routeStep.Value.Key.Contains("SMT"))
+                            strError = "<--HANDPLACE";
+                        else if (ibomqty != iprogqty && routeStep.Value.Key.Contains("SMT"))
+                            strError = "<--Count";
+                        if (CurrentLineNumber >= EndOfPage)
+                            WriteMidProgramFooterHeader(true);
+                        using (StreamWriter writer = new StreamWriter(FullPath, true))
+                        {
+                            writer.WriteLine(@"\par " + part + @"\tab  " + ibomqty.ToString() + " \\tab  " + strProgramQty + " \\tab " + strError + " ");
+                        }
+                        ++CurrentLineNumber;
+                    }
+                    using (StreamWriter writer = new StreamWriter(FullPath, true))
+                    {
+                        writer.WriteLine("\\par ");
+                    }
+                    ++CurrentLineNumber;
+
+                }
+                //write the zero qyts.......
+                if (CurrentLineNumber >= EndOfPage)
+                    WriteMidProgramFooterHeader(true);
+                using (StreamWriter writer = new StreamWriter(FullPath, true))
+                {
+                    writer.WriteLine("\\par " + NoRouteStepParts.Key + "" + Environment.NewLine + "" + @"\par Part Number\tab BOM\tab Program" + "" + Environment.NewLine + "" + "\\par ");
+                    CurrentLineNumber += 3;
+                }
+                NoRouteStepParts.Value.Sort();
+                foreach (var part in NoRouteStepParts.Value)
+                {
+
+                    int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(part.Item3)));
+                    int iprogqty = 0;
+                    ++iBomTotal;
+                    if (CurrentLineNumber >= EndOfPage)
+                        WriteMidProgramFooterHeader(false);
+                    using (StreamWriter writer = new StreamWriter(FullPath, true))
+                    {
+                        writer.WriteLine(@"\par " + part.Item1 + @"\tab  " + ibomqty.ToString() + " \\tab  " + iprogqty.ToString() + " \\tab ");
                     }
                     ++CurrentLineNumber;
                 }
+                ///write the total counts
+                ///
+                if (CurrentLineNumber >= EndOfPage - 3)
+                    WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
-                    writer.WriteLine("\\par ");
+                    writer.WriteLine("\\par" + Environment.NewLine + "\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " " + Environment.NewLine + "\\par" + Environment.NewLine + "\\par Error Key:" + Environment.NewLine + "" + @"\par C = refdes count; R = refdes mismatch" + "" + Environment.NewLine + "\\par");
                 }
-                ++CurrentLineNumber;
-                
+                CurrentLineNumber += 5;
             }
-            //write the zero qyts.......
-            if (CurrentLineNumber >= EndOfPage)
-                WriteMidProgramFooterHeader(true);
-            using (StreamWriter writer = new StreamWriter(FullPath, true))
+            catch (Exception e)
             {
-                writer.WriteLine("\\par " + NoRouteStepParts.Key + "\n" + @"\par Part Number\tab BOM\tab Program" + "\n" + "\\par ");
-                CurrentLineNumber += 3;
+                MessageBox.Show("Could not write Ref Des Count Section. Check all your options and make sure Pass, Machine, etc are set correctly," + Environment.NewLine + " Error = " + e.Message, "WriteRefDesCountData() Error");
             }
-            NoRouteStepParts.Value.Sort();
-            foreach (var part in NoRouteStepParts.Value)
-            {
 
-                int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(part.Item3)));
-                int iprogqty = 0;
-                ++iBomTotal;
-                if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader(false);
-                using (StreamWriter writer = new StreamWriter(FullPath, true))
-                {
-                    writer.WriteLine(@"\par " + part.Item1 + @"\tab  " + ibomqty.ToString() + " \\tab  " + iprogqty.ToString() + " \\tab ");
-                }
-                ++CurrentLineNumber;
-            }
-            ///write the total counts
-            ///
-            if (CurrentLineNumber >= EndOfPage - 5)
-                WriteMidProgramFooterHeader(true);
-            using (StreamWriter writer = new StreamWriter(FullPath, true))
-            {
-                writer.WriteLine("\\par\n\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
-            }
-            CurrentLineNumber += 5;
         }
 
         private SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>  PopulateRouteBom()
         {
+            var snCompare = new NumberStringComparer();
             ///Go through all the routing steps and keep the ones that have Ops assigned to them
             ///key = routeOpNumber , value = keyvalpair(key = routeOpDesc, value = List of Tuple(partnum, refDesString, bomqty)
-            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>();
+            SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>(snCompare);
             KeyValuePair<string, List<Tuple<string, string,string>>> zeroqtyStep = new KeyValuePair<string, List<Tuple<string, string,string>>>("Parts not assigned to a routing step.", new List<Tuple<string, string, string>>());
             RouteMap.Add("0", zeroqtyStep);
             foreach (var routeStep in Bom.RouteList)
@@ -446,7 +463,7 @@ namespace Methods_Console
 
         private void WriteRefDesCountHeader()
         {
-            string strRefDesCountHeader = @"\par \tab REFERENCE DESIGNATOR COUNT\n\par \n";
+            string strRefDesCountHeader = @"\par \tab REFERENCE DESIGNATOR COUNT" + Environment.NewLine + @"\par " + Environment.NewLine;
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 writer.WriteLine(strRefDesCountHeader);
@@ -456,11 +473,11 @@ namespace Methods_Console
 
         private string WriteNewProgramHeader(Ci2Parser ci2, string strLoadingInstructions, bool bWrite)
         {
-            string strNewProgramHeader = @"\par Program: " + ci2.ProgramName + @"\tab Date: " + ci2.DateCreated + @"\tab \tab " + ci2.MachineName + @"\tab Side: " + ci2.Pass + "\n"
-                                        + @"\par Loading Instructions: " + strLoadingInstructions + "\n"
-                                        + "\\par \n"
-                                        + "\\par Part Number\\tab Description\n"
-                                        + @"\par\tab Feeder\tab Qty\tab Reference Designators" + "\n"
+            string strNewProgramHeader = @"\par Program: " + ci2.ProgramName + @"\tab Date: " + ci2.DateCreated + @"\tab \tab " + ci2.MachineName + @"\tab Side: " + ci2.Pass + Environment.NewLine
+                                        + @"\par Loading Instructions: " + strLoadingInstructions + Environment.NewLine
+                                        + "\\par " + Environment.NewLine
+                                        + "\\par Part Number\\tab Description" + Environment.NewLine
+                                        + @"\par\tab Feeder\tab Qty\tab Reference Designators" + Environment.NewLine
                                         + @"\par _______________________________________________________________________________________________";
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
@@ -473,11 +490,11 @@ namespace Methods_Console
 
         private string WriteMidProgramFooterHeader(bool bWrite)
         {
-            string strFooterHeader = "\n\\par\n"
-                                    + @"\par " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + @" \tab Page  " + CurrentPageNumber.ToString() + @" \tab Version " + ThisProgramVersion.ToString() + @"\page \tab Assembly:\tab " + Bom.AssemblyName + "\n"
-                                    + @"\par \tab BOM Rev:\tab " + Bom.Rev + "\n"
-                                    + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + "\n"
-                                    + "\\par _______________________________________________________________________________________________\n";
+            string strFooterHeader = "" + Environment.NewLine + "\\par" + Environment.NewLine + ""
+                                    + @"\par " + DateTime.Now.ToShortDateString() + " " + DateTime.Now.ToLongTimeString() + @" \tab Page  " + CurrentPageNumber.ToString() + @" \tab Version " + ThisProgramVersion.ToString() + @"\page \tab Assembly:\tab " + Bom.AssemblyName + Environment.NewLine
+                                    + @"\par \tab BOM Rev:\tab " + Bom.Rev + Environment.NewLine
+                                    + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + Environment.NewLine
+                                    + "\\par _______________________________________________________________________________________________" + Environment.NewLine;
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
                 while(CurrentLineNumber < EndOfPage)
@@ -510,10 +527,10 @@ namespace Methods_Console
         public void CreateRtfDoc()
         {
             string strRtfFirstLine = @"{\rtf1\ansi\ansicpg1252\deff0\deflang1033{\fonttbl{\f0\fnil\fcharset0 Courier New;}}\viewkind4\uc1\pard\tx2160\tx3600\tx4320\tx7200\margl360\margr360\margt360\margb360 {\f0\fs20";
-            string strInitialHeader = @"\tab Assembly:\tab " + Bom.AssemblyName + "\n"
-                       + @"\par \tab BOM Rev:\tab " + Bom.Rev + "\n"
-                       + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + "\n"
-                       + @"\par _______________________________________________________________________________________________" + "\n";
+            string strInitialHeader = @"\tab Assembly:\tab " + Bom.AssemblyName + Environment.NewLine
+                       + @"\par \tab BOM Rev:\tab " + Bom.Rev + Environment.NewLine
+                       + @"\par \tab Listing Date:\tab " + Bom.DateOfListing + Environment.NewLine
+                       + @"\par _______________________________________________________________________________________________" + Environment.NewLine;
             using (StreamWriter writer = new StreamWriter(FullPath, false))
             {
                 writer.WriteLine(strRtfFirstLine);
@@ -523,11 +540,11 @@ namespace Methods_Console
         }
         private void WriteHandPlaceHeader(string pass)
         {         
-            string strNewProgramHeader = @"\par Program: " + pass + " " + "Hand Place" + @"\tab Date: " + ProgramList.First().DateCreated + @"\tab Hand Place\tab Side: " + pass + "\n"
-                            + @"\par Loading Instructions: Hand Place\n"
-                            + "\\par \n"
-                            + "\\par Part Number\\tab Description\n"
-                            + @"\par\tab Feeder\tab Qty\tab Reference Designators" + "\n"
+            string strNewProgramHeader = @"\par Program: " + pass + " " + "Hand Place" + @"\tab Date: " + ProgramList.First().DateCreated + @"\tab Hand Place\tab Side: " + pass + Environment.NewLine
+                            + @"\par Loading Instructions: Hand Place" + Environment.NewLine
+                            + "\\par " + Environment.NewLine
+                            + "\\par Part Number\\tab Description" + Environment.NewLine
+                            + @"\par\tab Feeder\tab Qty\tab Reference Designators" + Environment.NewLine
                             + @"\par _______________________________________________________________________________________________";
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
@@ -543,7 +560,7 @@ namespace Methods_Console
             WriteMidProgramFooterHeader(true);
             WriteHandPlaceHeader(PassesList[0]);
             CurrentLineNumber = 13;
-            string[] arr = { "\n" };
+            string[] arr = { Environment.NewLine };
             for (int j = 0; j < lstHpOneLines.Count; ++j)
             {
                 string[] tempLines = lstHpOneLines[j].Split(arr, StringSplitOptions.RemoveEmptyEntries);
@@ -577,7 +594,7 @@ namespace Methods_Console
             WriteMidProgramFooterHeader(true);
             WriteHandPlaceHeader(PassesList[1]);
             CurrentLineNumber = 13;
-            string[] arr = { "\n" };
+            string[] arr = { Environment.NewLine };
             for (int j = 0; j < lstHpOneLines.Count; ++j)
             {
                 List<string> lstPartLines = lstHpOneLines[j].Split(arr, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -694,7 +711,7 @@ namespace Methods_Console
                 }
                 if (lstRds.Count == 0)
                     strTempLine = strTempLine.TrimEnd(',');
-                strTempLine += "\n";
+                strTempLine += Environment.NewLine;
                 strRefDesLines = strTempLine;
                 //rest of ref des lines
                 if (lstRds.Count > 0)
@@ -709,11 +726,11 @@ namespace Methods_Console
                         }
                         if (lstRds.Count == 0)
                             strTempLine = strTempLine.TrimEnd(',');
-                        strTempLine += "\n";
+                        strTempLine += Environment.NewLine;
                         strRefDesLines += @"\par \tab \tab \tab " + strTempLine;
                     }
                 }
-                strTemp = @"\par " + partnum + @"\tab " + desc + "\\tab \n" + @"\par \tab Hand Place\tab " + strQty + @"\tab " + strRefDesLines + "\n" + @"\par";
+                strTemp = @"\par " + partnum + @"\tab " + desc + "\\tab " + Environment.NewLine + "" + @"\par \tab Hand Place\tab " + strQty + @"\tab " + strRefDesLines + "" + Environment.NewLine + "" + @"\par";
 
                 lstHpLines.Add(strTemp);
             }
@@ -760,8 +777,8 @@ namespace Methods_Console
             string strNewProgMarker = "-new prog-";
             foreach (Ci2Parser export in ProgramList)
             {
-                bAgile2ndPass = export.Pass.Equals(PassesList[1]) && !Bom.HasRouting;
-                if (export.Pass.Equals(PassesList[0]))
+                bAgile2ndPass = bHasTwoPasses && export.Pass.Equals(PassesList[1]) && !Bom.HasRouting;
+                if (export.Pass.Equals(PassesList[0]) || !bHasTwoPasses)
                 {
                     strInstructions = LoadingList[0];
                     if (Bom.HasRouting)
@@ -773,7 +790,7 @@ namespace Methods_Console
                         }
                     }
                 }
-                else if (export.Pass.Equals(PassesList[1]))
+                else if (bHasTwoPasses && export.Pass.Equals(PassesList[1]))
                 {
                     strInstructions = LoadingList[1];
                     if (Bom.HasRouting &&  string.IsNullOrEmpty(export.OpCode))
@@ -818,7 +835,7 @@ namespace Methods_Console
                 if (exportcounter == 1)
                     CurrentLineNumber = 13;
                 List<string> lstPartInfo = PrepPartInfo(export);
-                string[] arr = { "\n" };
+                string[] arr = { Environment.NewLine };
                 for (int j = 0; j < lstPartInfo.Count; ++j)
                 {
                     List<string> lstPartLines = lstPartInfo[j].Split(arr, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -861,6 +878,10 @@ namespace Methods_Console
                 }
                 ++exportcounter;
             }
+            if(bFirstPassHandWritten == false && !bAgile2ndPass)
+            {
+                WriteHandPlaceOneSection();
+            }
             if (bAgile2ndPass)
             {
                 WriteAgileHpSection();
@@ -888,7 +909,7 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader(true);
                 WriteHandPlaceHeader(PassesList[1]);
             }
-            if(Bom.HasRouting)
+            if(bHasTwoPasses && Bom.HasRouting)
                 WriteHandPlaceTwoSection();               
         }
 
@@ -959,7 +980,7 @@ namespace Methods_Console
                 }
                 if (refdesInput.Count == 0)
                     strTempLine = strTempLine.TrimEnd(',');
-                strTempLine += "\n";
+                strTempLine += Environment.NewLine;
                 strRefDesLines = strTempLine;
                 //rest of ref des lines
                 if (refdesInput.Count > 0)
@@ -990,7 +1011,7 @@ namespace Methods_Console
                         }
                         if (refdesInput.Count == 0)
                             strTempLine = strTempLine.TrimEnd(',');
-                        strTempLine += "\n";
+                        strTempLine += Environment.NewLine;
                         strRefDesLines += @"\par \tab \tab \tab " + strTempLine;
                     }
                 }
@@ -1027,7 +1048,7 @@ namespace Methods_Console
                        select tup;
             foreach (var sortedItems in test)
             {
-                string temp  = @"\par " + sortedItems.Item1 + @"\tab " + sortedItems.Item2 + @"\tab " + sortedItems.Item3 + "\n" + @"\par \tab " + sortedItems.Item4 + @"\tab " + sortedItems.Item5 + @"\tab " + sortedItems.Item6 + @"\par";
+                string temp  = @"\par " + sortedItems.Item1 + @"\tab " + sortedItems.Item2 + @"\tab " + sortedItems.Item3 + Environment.NewLine + @"\par \tab " + sortedItems.Item4 + @"\tab " + sortedItems.Item5 + @"\tab " + sortedItems.Item6 + @"\par";
                 info.Add(temp);
             }
             return info;
@@ -1143,7 +1164,7 @@ namespace Methods_Console
                     WriteMidProgramFooterHeader(true);
                 using (StreamWriter writer = new StreamWriter(FullPath, true))
                 {
-                    writer.WriteLine(@"\par " + strRouteStepDesc + "\n" + @"\par Part Number\tab BOM\tab Program" + "\n" + "\\par ");
+                    writer.WriteLine(@"\par " + strRouteStepDesc + Environment.NewLine + @"\par Part Number\tab BOM\tab Program" + Environment.NewLine + "\\par ");
                     CurrentLineNumber += 3;
                 }
                 foreach (string part in lstMasterPartList)
@@ -1202,7 +1223,7 @@ namespace Methods_Console
                 WriteMidProgramFooterHeader(true);
             using (StreamWriter writer = new StreamWriter(FullPath, true))
             {
-                writer.WriteLine("\\par\n\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " \n\\par\n\\par Error Key:\n" + @"\par C = refdes count; R = refdes mismatch" + "\n\\par");
+                writer.WriteLine("\\par" + Environment.NewLine + "\\par TOTAL\\tab  " + iBomTotal + @" \tab  " + iProgTotal + " " + Environment.NewLine + "\\par" + Environment.NewLine + "\\par Error Key:" + Environment.NewLine + "" + @"\par C = refdes count; R = refdes mismatch" + "" + Environment.NewLine + "\\par");
             }
             CurrentLineNumber += 5;
         }
@@ -1236,6 +1257,16 @@ namespace Methods_Console
                     RouteMap.Remove(key);
             }
             return RouteMap;
+        }
+        public class NumberStringComparer : IComparer<string>
+        {
+            public int Compare(string x, string y)
+            {
+                int a = Convert.ToInt32(x);
+                int b = Convert.ToInt32(y);
+                // otherwise return as string comparison
+                return a.CompareTo(b);
+            }
         }
     }
 }

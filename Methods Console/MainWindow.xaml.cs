@@ -166,7 +166,19 @@ namespace Methods_Console
             }
 
         }
-
+        private bool IsDoublePassAssembly()
+        {
+            bool bHasTwoPasses = false;
+            HashSet<string> hsSides = new HashSet<string>();            
+            foreach(var export in ExportList)
+            {
+                string side = export.FileName.Contains("BOT") ? "SMT 1" : "SMT 2";
+                hsSides.Add(side);
+            }
+            if (hsSides.Count > 1)
+                bHasTwoPasses = true;
+            return bHasTwoPasses;
+        }
         private void ClearData()
         {
             foreach(TextBox tb in lstProgTextBoxes)
@@ -341,8 +353,13 @@ namespace Methods_Console
                 }
                 else if (program.Pass.Equals(lstPasses[1]))
                 {
-                    lstProgComboBoxes[i].SelectedIndex = 1;
-                    bHasTwoPasses = true;
+                    if (IsDoublePassAssembly())
+                    {
+                        lstProgComboBoxes[i].SelectedIndex = 1;
+                        bHasTwoPasses = true;
+                    }
+                    else
+                        lstProgComboBoxes[i].SelectedIndex = 0;
                 }
                 foreach(var item in dictMachines)
                 {
@@ -414,14 +431,14 @@ namespace Methods_Console
                 string filename = parser.ProgramName;
                 if (reBot.IsMatch(filename))
                 {
-                    if (bDescending == false)
+                    if (bDescending == false || IsDoublePassAssembly() == false)
                         parser.Pass = lstPasses[0];
                     else
                         parser.Pass = lstPasses[1];
                 }
                 else if (reTop.IsMatch(filename))
                 {
-                    if (bDescending == false)
+                    if (bDescending == false && IsDoublePassAssembly())
                         parser.Pass = lstPasses[1];
                     else
                         parser.Pass = lstPasses[0];
@@ -496,6 +513,16 @@ namespace Methods_Console
 
         private void btnCreate_Click(object sender, RoutedEventArgs e)
         {
+            try
+            {
+                string filename = @"C:\BaaN-DAT\" + Bom.AssemblyName + "_" + Bom.Rev + ".rtf";
+                using (StreamWriter writer = new StreamWriter(filename, false)) { }
+            }
+            catch(IOException ioException)
+            {
+                MessageBox.Show("Cannot create setup sheet file. If you have it open please close it and try again.\n" + ioException.Message, "Error Creating Setup Sheet", MessageBoxButton.OK, MessageBoxImage.Error);
+                return;
+            }
             List<string> lstLoadingInstructions = new List<string>(new string[] { tbLoadingInsOne.Text, tbLoadingInsTwo.Text });
             SetupSheetGenerator setupSheet = new SetupSheetGenerator(Bom, ExportList, lstLoadingInstructions);
             setupSheet.CreateSheet();          
