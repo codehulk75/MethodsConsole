@@ -46,5 +46,23 @@ namespace Methods_Console.Properties {
                 this["StatusBarThemeNumber"] = value;
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9211")]
+        public string SmtOneTaskNumber {
+            get {
+                return ((string)(this["SmtOneTaskNumber"]));
+            }
+        }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("9212")]
+        public string SmtTwoTaskNumber {
+            get {
+                return ((string)(this["SmtTwoTaskNumber"]));
+            }
+        }
     }
 }

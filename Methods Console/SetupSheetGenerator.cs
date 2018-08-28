@@ -31,9 +31,13 @@ namespace Methods_Console
         public string OutputDir { get; set; }
         public string FileName { get; private set; }
         public string FullPath { get; private set; }
+        public string SmtOneTaskNum { get; private set; }
+        public string SmtTwoTaskNum { get; private set; }
         public bool bHasTwoPasses { get; private set; }
         public SetupSheetGenerator(BeiBOM bom, List<Ci2Parser> ci2List, List<string> loadingInstructionsList)
         {
+            SmtOneTaskNum = Properties.Settings.Default.SmtOneTaskNumber;
+            SmtTwoTaskNum = Properties.Settings.Default.SmtTwoTaskNumber;
             CurrentLineNumber = 1;
             CurrentPageNumber = 1;
             EndOfPage = 62;
@@ -306,9 +310,15 @@ namespace Methods_Console
                 Regex reSecondPass = new Regex(@"(smt 2(?!.*inspect)|smt second)", RegexOptions.IgnoreCase);
                 SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
                 int iBomTotal = 0, iProgTotal = 0;
-                ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
-                KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = BomItemsByRouteStep["0"];
-                BomItemsByRouteStep.Remove("0");
+                KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = new KeyValuePair<string, List<Tuple<string, string, string>>>();
+                if (BomItemsByRouteStep.ContainsKey("0"))
+                {
+                    ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
+                    ///
+                    NoRouteStepParts = BomItemsByRouteStep["0"];
+                    BomItemsByRouteStep.Remove("0");
+                }
+
                 foreach (var routeStep in BomItemsByRouteStep)
                 {
                     HashSet<string> hMasterPartsList = new HashSet<string>();
@@ -346,7 +356,9 @@ namespace Methods_Console
                     {
                         string strProgramQty = "0";
                         string strError = "";
-                        Tuple<string, string, string> tBomPart = partInfo.First(x => x.Item1.Equals(part));
+                        Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+                        if (tBomPart == null)
+                            tBomPart = new Tuple<string, string, string>("0", "", "0");
                         foreach (Ci2Parser export in ProgramList)
                         {
                             if (export.OpCode.Equals(routeStep.Key))
@@ -365,7 +377,7 @@ namespace Methods_Console
                         }
                         int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
                         int iprogqty = Convert.ToInt32(strProgramQty);
-                        if (ibomqty == 0)
+                        if (ibomqty == 0 && tBomPart.Item1.Equals(part))
                             ++iBomTotal;
                         else
                             iBomTotal += ibomqty;
@@ -391,29 +403,33 @@ namespace Methods_Console
                     ++CurrentLineNumber;
 
                 }
-                //write the zero qyts.......
-                if (CurrentLineNumber >= EndOfPage)
-                    WriteMidProgramFooterHeader(true);
-                using (StreamWriter writer = new StreamWriter(FullPath, true))
+                if (!string.IsNullOrEmpty(NoRouteStepParts.Key))
                 {
-                    writer.WriteLine("\\par " + NoRouteStepParts.Key + "" + Environment.NewLine + "" + @"\par Part Number\tab BOM\tab Program" + "" + Environment.NewLine + "" + "\\par ");
-                    CurrentLineNumber += 3;
-                }
-                NoRouteStepParts.Value.Sort();
-                foreach (var part in NoRouteStepParts.Value)
-                {
-
-                    int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(part.Item3)));
-                    int iprogqty = 0;
-                    ++iBomTotal;
+                    //write the zero qyts.......
                     if (CurrentLineNumber >= EndOfPage)
-                        WriteMidProgramFooterHeader(false);
+                        WriteMidProgramFooterHeader(true);
                     using (StreamWriter writer = new StreamWriter(FullPath, true))
                     {
-                        writer.WriteLine(@"\par " + part.Item1 + @"\tab  " + ibomqty.ToString() + " \\tab  " + iprogqty.ToString() + " \\tab ");
+                        writer.WriteLine("\\par " + NoRouteStepParts.Key + "" + Environment.NewLine + "" + @"\par Part Number\tab BOM\tab Program" + "" + Environment.NewLine + "" + "\\par ");
+                        CurrentLineNumber += 3;
                     }
-                    ++CurrentLineNumber;
+                    NoRouteStepParts.Value.Sort();
+                    foreach (var part in NoRouteStepParts.Value)
+                    {
+
+                        int ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(part.Item3)));
+                        int iprogqty = 0;
+                        ++iBomTotal;
+                        if (CurrentLineNumber >= EndOfPage)
+                            WriteMidProgramFooterHeader(true);
+                        using (StreamWriter writer = new StreamWriter(FullPath, true))
+                        {
+                            writer.WriteLine(@"\par " + part.Item1 + @"\tab  " + ibomqty.ToString() + " \\tab  " + iprogqty.ToString() + " \\tab ");
+                        }
+                        ++CurrentLineNumber;
+                    }
                 }
+               
                 ///write the total counts
                 ///
                 if (CurrentLineNumber >= EndOfPage - 3)
@@ -781,13 +797,9 @@ namespace Methods_Console
                 if (export.Pass.Equals(PassesList[0]) || !bHasTwoPasses)
                 {
                     strInstructions = LoadingList[0];
-                    if (Bom.HasRouting)
+                    if (Bom.HasRouting && string.IsNullOrEmpty(export.OpCode))
                     {
                         export.OpCode = GetOpCode(PassesList[0]);
-                        if (string.IsNullOrEmpty(export.OpCode))
-                        {
-                            export.OpCode = GetOpCode(PassesList[0]);
-                        }
                     }
                 }
                 else if (bHasTwoPasses && export.Pass.Equals(PassesList[1]))
@@ -926,8 +938,7 @@ namespace Methods_Console
             string strRefDesLines = null;
             string strQty = null;
             List<Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>> tupList = new List<Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>>();
-    
-           
+              
             foreach(var feederItem in export.Feedermap)
             {
                 string strTempLine = "";
@@ -974,7 +985,19 @@ namespace Methods_Console
                             PassTwoProgramRdMap.Add(partnum, new List<string>(new string[] { refdesInput[0] }));
                     }
                     if (OpByRefCopy.ContainsKey(refdesInput[0]))
-                        OpByRefCopy.Remove(refdesInput[0]);
+                    {
+                        //Remove from OpByRefCopy ONLY IF PART NUMBERS MATCH.  Otherwise leave OpByRefCopy alone
+                        //That would most likely be a part sub in the program and need to leave original BOM pn for hp section
+
+                        string bompn = OpByRefCopy[refdesInput[0]].Split(':')[1];
+                        string bomop = OpByRefCopy[refdesInput[0]].Split(':')[0];
+                        string progop = null;
+                        if (!string.IsNullOrEmpty(export.OpCode))
+                            progop = export.OpCode;
+                        if (partnum.Equals(bompn) && !string.IsNullOrEmpty(progop) && progop.Equals(bomop))
+                            OpByRefCopy.Remove(refdesInput[0]);
+                    }
+                        
                     strTempLine = strTempLine + refdesInput[0] + ',';
                     refdesInput.RemoveAt(0);
                 }
@@ -1005,7 +1028,18 @@ namespace Methods_Console
                                     PassTwoProgramRdMap.Add(partnum, new List<string>(new string[] { refdesInput[0] }));
                             }
                             if (OpByRefCopy.ContainsKey(refdesInput[0]))
-                                OpByRefCopy.Remove(refdesInput[0]);
+                            {
+                                //Remove from OpByRefCopy ONLY IF PART NUMBERS MATCH.  Otherwise leave OpByRefCopy alone
+                                //That would most likely be a part sub in the program and need to leave original BOM pn for hp section
+
+                                string bompn = OpByRefCopy[refdesInput[0]].Split(':')[1];
+                                string bomop = OpByRefCopy[refdesInput[0]].Split(':')[0];
+                                string progop = null;
+                                if (!string.IsNullOrEmpty(export.OpCode))
+                                    progop = export.OpCode;
+                                if (partnum.Equals(bompn) && !string.IsNullOrEmpty(progop) && progop.Equals(bomop))
+                                    OpByRefCopy.Remove(refdesInput[0]);
+                            }
                             strTempLine += refdesInput[0] + ',';
                             refdesInput.RemoveAt(0);
                         }

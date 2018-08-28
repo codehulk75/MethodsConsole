@@ -22,9 +22,13 @@ namespace Methods_Console
         public bool IsValid { get; private set; }
         public Dictionary<string, List<string>> BomMap { get; private set; } //Key = '<Findnum>:<Sequence>', List = [0]Part Number, [1]Operation, [2]AssyDescription, [3]comma-separated ref des's 
         public List<string> BomLines { get; private set; }
+        public string SmtOneTaskNum { get; private set; }
+        public string SmtTwoTaskNum { get; private set; }
 
         public BaanBOMParser(string path)
         {
+            SmtOneTaskNum = Properties.Settings.Default.SmtOneTaskNumber;
+            SmtTwoTaskNum = Properties.Settings.Default.SmtTwoTaskNumber;
             AssemblyName = null;
             DateOfListing = null;
             AssyDescription = null;

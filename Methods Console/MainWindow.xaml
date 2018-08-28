@@ -7,7 +7,7 @@
         xmlns:local="clr-namespace:Methods_Console"
         xmlns:Custom="http://metro.mahapps.com/winfx/xaml/controls"             
         mc:Ignorable="d"
-        Title="Methods Console" Height="600" Width="900">
+        Title="Methods Console" Height="600" Width="900" Icon="Zerode-Plump-Control-Panel.ico">
     <Grid>
         <StackPanel HorizontalAlignment="Left" Margin="10,10,0,10" Width="145">
             <TextBlock x:Name="TasksText" Height="27" Margin="10,0" TextWrapping="Wrap" FontSize="13.333" FontFamily="Arial" Foreground="#FFFDF9F9" Text=" Tasks" ToolTip="Find something to do!!"/>
