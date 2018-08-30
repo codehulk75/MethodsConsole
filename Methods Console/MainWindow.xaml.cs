@@ -51,6 +51,7 @@ namespace Methods_Console
             thisProgramName = thisProgram.GetName();
             thisProgramVersion = thisProgramName.Version;
             InitializeComponent();
+            System.IO.Directory.CreateDirectory(@"C:\BaaN-DAT");
             InitializeThemeColors();
             try
             {
@@ -534,6 +535,7 @@ namespace Methods_Console
             worker.RunWorkerCompleted += (object s, RunWorkerCompletedEventArgs eargs) => {
                 if (pw != null && pw.Visibility == Visibility.Visible)
                 {
+                    pw.Title = "Done Processing";
                     pw.progressBar.Visibility = Visibility.Hidden;
                     pw.StatusLabel.Content = "Setup Sheet Complete!";
                     pw.OpenButton.Visibility = Visibility.Visible;

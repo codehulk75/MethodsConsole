@@ -4352,7 +4352,7 @@ QwBEAF8AUgBPAE0AAQBFAHgAcAByAGUAcwBzAA==
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]Methods Console.Primary output</td><td/></row>
 		<row><td>ProductCode</td><td>{A48B0495-0C6F-460B-9FF6-8EB996A52244}</td><td/></row>
 		<row><td>ProductName</td><td>Methods Console</td><td/></row>
-		<row><td>ProductVersion</td><td>1.0.0.0</td><td/></row>
+		<row><td>ProductVersion</td><td>1.1.0.0</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
