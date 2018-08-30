@@ -87,7 +87,17 @@ namespace Methods_Console
             WritePartsInBomNotInProgramHeader();
             WritePartsInBomNotInProgramData();
             RtfDocWriteLastLine();
-            MessageBox.Show("Done");
+            //try
+            //{
+            //    MessageBoxResult mbres = MessageBox.Show("Done. Do you want to open the setup sheet with notepad?", "Setup Sheet Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            //    if (mbres == MessageBoxResult.Yes)
+            //        System.Diagnostics.Process.Start("notepad.exe", FullPath);
+            //}
+            //catch (Exception e)
+            //{
+            //    MessageBox.Show("There was a problem opening the new setup sheet.\nError = " + e.Message, "CreateBaanSetupSheet() Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //}
+
         }
         private void CreateAgileSetupSheet()
         {
@@ -104,7 +114,17 @@ namespace Methods_Console
             WritePartsInBomNotInProgramHeader();
             WritePartsInBomNotInProgramData();
             RtfDocWriteLastLine();
-            MessageBox.Show("Done");
+            //try
+            //{
+            //    MessageBoxResult mbres = MessageBox.Show("Done. Do you want to open the setup sheet with notepad?", "Setup Sheet Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
+            //    if (mbres == MessageBoxResult.Yes)
+            //        System.Diagnostics.Process.Start("notepad.exe", FullPath);
+            //}
+            //catch(Exception e)
+            //{
+            //    MessageBox.Show("There was a problem opening the new setup sheet.\nError = " + e.Message, "CreateAgileSetupSheet() Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
+            //}
+
         }
         private void WritePartsInBomNotInProgramData()
         {

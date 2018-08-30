@@ -72,7 +72,8 @@
         <TextBox x:Name="textBoxBomDate" HorizontalAlignment="Left" Height="23" Margin="645,39,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="80" Background="#FFE2E2E2"/>
         <Button x:Name="btnFlipLine" Content="Flip Line" HorizontalAlignment="Left" Margin="807,40,0,0" VerticalAlignment="Top" Width="75" Click="btnFlipLine_Click"/>
     </Grid>
+
     <modern:ModernWindow.StatusBar>
-        <TextBlock VerticalAlignment="Center">Ready</TextBlock>
+        <TextBlock VerticalAlignment="Center" Text="Ready"></TextBlock>
     </modern:ModernWindow.StatusBar>
 </modern:ModernWindow>

@@ -16,6 +16,7 @@ using System.Windows.Shapes;
 using System.Text.RegularExpressions;
 using System.IO;
 using System.Reflection;
+using System.ComponentModel;
 
 namespace Methods_Console
 {
@@ -513,6 +514,9 @@ namespace Methods_Console
 
         private void btnCreate_Click(object sender, RoutedEventArgs e)
         {
+            ProgressWindow pw = new ProgressWindow(@"C:\BaaN-DAT\"+Bom.AssemblyName + "_" + Bom.Rev + ".rtf");
+            pw.Owner = this;
+            pw.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             try
             {
                 string filename = @"C:\BaaN-DAT\" + Bom.AssemblyName + "_" + Bom.Rev + ".rtf";
@@ -524,8 +528,25 @@ namespace Methods_Console
                 return;
             }
             List<string> lstLoadingInstructions = new List<string>(new string[] { tbLoadingInsOne.Text, tbLoadingInsTwo.Text });
-            SetupSheetGenerator setupSheet = new SetupSheetGenerator(Bom, ExportList, lstLoadingInstructions);
-            setupSheet.CreateSheet();          
+
+            BackgroundWorker worker = new BackgroundWorker();
+            worker.DoWork += worker_DoWork;
+            worker.RunWorkerCompleted += (object s, RunWorkerCompletedEventArgs eargs) => {
+                if (pw != null && pw.Visibility == Visibility.Visible)
+                {
+                    pw.progressBar.Visibility = Visibility.Hidden;
+                    pw.StatusLabel.Content = "Setup Sheet Complete!";
+                    pw.OpenButton.Visibility = Visibility.Visible;
+                    pw.editButton.Visibility = Visibility.Visible;
+                    pw.closeButton.Visibility = Visibility.Visible;
+                } };
+            pw.Show();
+            worker.RunWorkerAsync(lstLoadingInstructions);     
+        }
+        void worker_DoWork(object sender, DoWorkEventArgs e)
+        {
+            SetupSheetGenerator setupSheet = new SetupSheetGenerator(Bom, ExportList, (List<string>)e.Argument);
+            setupSheet.CreateSheet();
         }
 
         private void comboBoxMach1_SelectionChanged(object sender, SelectionChangedEventArgs e)
