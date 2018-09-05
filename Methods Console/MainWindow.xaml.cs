@@ -515,6 +515,7 @@ namespace Methods_Console
 
         private void btnCreate_Click(object sender, RoutedEventArgs e)
         {
+            (sender as Button).IsEnabled = false;
             ProgressWindow pw = new ProgressWindow(@"C:\BaaN-DAT\"+Bom.AssemblyName + "_" + Bom.Rev + ".rtf");
             pw.Owner = this;
             pw.WindowStartupLocation = WindowStartupLocation.CenterOwner;
@@ -525,6 +526,7 @@ namespace Methods_Console
             }
             catch(IOException ioException)
             {
+                (sender as Button).IsEnabled = true;
                 MessageBox.Show("Cannot create setup sheet file. If you have it open please close it and try again.\n" + ioException.Message, "Error Creating Setup Sheet", MessageBoxButton.OK, MessageBoxImage.Error);
                 return;
             }
@@ -541,6 +543,7 @@ namespace Methods_Console
                     pw.OpenButton.Visibility = Visibility.Visible;
                     pw.editButton.Visibility = Visibility.Visible;
                     pw.closeButton.Visibility = Visibility.Visible;
+                    (sender as Button).IsEnabled = true;
                 } };
             pw.Show();
             worker.RunWorkerAsync(lstLoadingInstructions);     

@@ -237,8 +237,18 @@ namespace Methods_Console
                     }
                     else
                     {
-                        string track = match.Groups[3].Captures[3].Value;
-                        string rotation = match.Groups[3].Captures[4].Value;
+
+                        string track = null;
+                        string rotation = null;
+                        if (match.Groups[3].Captures.Count > 5)
+                            track = match.Groups[3].Captures[3].Value;
+                        else
+                            track = "1";
+                        if (match.Groups[3].Captures.Count > 5)
+                            rotation = match.Groups[3].Captures[4].Value;
+                        else
+                            rotation = match.Groups[3].Captures[3].Value;
+
                         if (Feedermap.ContainsKey(compid))
                         {
                             Feedermap[compid].Add(feeder);
