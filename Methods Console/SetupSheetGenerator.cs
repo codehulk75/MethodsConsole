@@ -17,6 +17,8 @@ namespace Methods_Console
         Assembly ThisProgram;
         AssemblyName ThisProgramName;
         Version ThisProgramVersion;
+        public List<string> SmtOneTasks { get; private set; }
+        public List<string> SmtTwoTasks { get; private set; }
         public int EndOfPage { get; private set; }
         public int HeaderLength { get; private set; }
         public BeiBOM Bom { get; private set; }
@@ -31,13 +33,11 @@ namespace Methods_Console
         public string OutputDir { get; set; }
         public string FileName { get; private set; }
         public string FullPath { get; private set; }
-        public string SmtOneTaskNum { get; private set; }
-        public string SmtTwoTaskNum { get; private set; }
         public bool bHasTwoPasses { get; private set; }
         public SetupSheetGenerator(BeiBOM bom, List<Ci2Parser> ci2List, List<string> loadingInstructionsList)
         {
-            SmtOneTaskNum = Properties.Settings.Default.SmtOneTaskNumber;
-            SmtTwoTaskNum = Properties.Settings.Default.SmtTwoTaskNumber;
+            SmtOneTasks = Properties.Settings.Default.SmtOneTaskNumber.Split(';').ToList();
+            SmtTwoTasks = Properties.Settings.Default.SmtTwoTaskNumber.Split(';').ToList();
             CurrentLineNumber = 1;
             CurrentPageNumber = 1;
             EndOfPage = 62;
@@ -776,24 +776,29 @@ namespace Methods_Console
         private string GetOpCode(string strPass)
         {
             string opcode = null;
-            Regex reFirstPass = new Regex(@"(smt 1(?!.*inspect)|smt first)", RegexOptions.IgnoreCase);
-            Regex reSecondPass = new Regex(@"(smt 2(?!.*inspect)|smt second)", RegexOptions.IgnoreCase);
             foreach (string op in Bom.RouteList)
             {
+                string currTask = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[1];
                 if (strPass.Equals(PassesList[0]))
                 {
-                    if (reFirstPass.Match(op).Success)
+                    foreach(string task in SmtOneTasks)
                     {
-                        opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
-                        break;
+                        if(task.Equals(currTask))
+                        {
+                            opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            break;
+                        }
                     }
                 }
                 else if (strPass.Equals(PassesList[1]))
                 {
-                    if (reSecondPass.Match(op).Success)
+                    foreach (string task in SmtTwoTasks)
                     {
-                        opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
-                        break;
+                        if (task.Equals(currTask))
+                        {
+                            opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            break;
+                        }
                     }
                 }
 

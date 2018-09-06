@@ -9,10 +9,10 @@
       <Value Profile="(Default)">1</Value>
     </Setting>
     <Setting Name="SmtOneTaskNumber" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">9211</Value>
+      <Value Profile="(Default)">B101;241;2000;9211;9221</Value>
     </Setting>
     <Setting Name="SmtTwoTaskNumber" Type="System.String" Scope="Application">
-      <Value Profile="(Default)">9212</Value>
+      <Value Profile="(Default)">B102;242;2100;9212</Value>
     </Setting>
   </Settings>
 </SettingsFile>

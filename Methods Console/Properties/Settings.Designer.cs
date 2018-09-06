@@ -49,7 +49,7 @@ namespace Methods_Console.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9211")]
+        [global::System.Configuration.DefaultSettingValueAttribute("B101;241;2000;9211;9221")]
         public string SmtOneTaskNumber {
             get {
                 return ((string)(this["SmtOneTaskNumber"]));
@@ -58,7 +58,7 @@ namespace Methods_Console.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("9212")]
+        [global::System.Configuration.DefaultSettingValueAttribute("B102;242;2100;9212")]
         public string SmtTwoTaskNumber {
             get {
                 return ((string)(this["SmtTwoTaskNumber"]));
