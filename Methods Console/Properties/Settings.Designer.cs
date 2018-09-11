@@ -64,5 +64,14 @@ namespace Methods_Console.Properties {
                 return ((string)(this["SmtTwoTaskNumber"]));
             }
         }
+        
+        [global::System.Configuration.ApplicationScopedSettingAttribute()]
+        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
+        [global::System.Configuration.DefaultSettingValueAttribute("FZ60XC;GC-60_1;GC-60_2;GI-14;GX-11")]
+        public string SmtMachines {
+            get {
+                return ((string)(this["SmtMachines"]));
+            }
+        }
     }
 }

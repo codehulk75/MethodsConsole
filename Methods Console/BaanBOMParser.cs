@@ -92,7 +92,7 @@ namespace Methods_Console
             Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
             Regex reRev = new Regex(@"Revision\s*:\s+(\S+)");
-            Regex reRouteList = new Regex(@"^\s+\|\s+(\d{1,4})/\s+\d\s+\|\s+(\w?\d{1,4})\s+\|(.*)\|\d{2}-\d{2}-\d{2}\s+\|\s+\|\s+\w+\s+\|\s+\|\s+\d{1,3}\s+\|\s+\d+\.\d+\s+\|\s+\d+\.\d+\s*\|\s+\|\r?$");
+            Regex reRouteList = new Regex(@"^\s+\|\s+(\d{1,4})/\s+\d\s+\|\s+([A-Z]?\d{1,4})\s+\|(.*)\|\d{2}-\d{2}-\d{2}\s+\|\s+\|\s+\w+\s+\|\s+\w*\s+\|\s+\d{1,3}\s+\|\s+\d+\.\d+\s+\|\s+\d+\.\d+\s*\|\s+\|\r?$");
             Regex reDescription = new Regex(@"^Description\s+:\s+(.*)");
             bool bDateFound = false;
             bool bAssemblyNameFound = false;

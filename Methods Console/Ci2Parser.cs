@@ -240,11 +240,13 @@ namespace Methods_Console
 
                         string track = null;
                         string rotation = null;
-                        if (match.Groups[3].Captures.Count > 5)
+                        //string track = match.Groups[3].Captures[3].Value;
+                        //string rotation = match.Groups[3].Captures[4].Value;
+                        if (match.Groups[3].Captures.Count > 4)
                             track = match.Groups[3].Captures[3].Value;
                         else
                             track = "1";
-                        if (match.Groups[3].Captures.Count > 5)
+                        if (match.Groups[3].Captures.Count > 4)
                             rotation = match.Groups[3].Captures[4].Value;
                         else
                             rotation = match.Groups[3].Captures[3].Value;

@@ -67,6 +67,8 @@ namespace Methods_Console
                         string pn = StripPrefix(baanparser.BomMap[record.Key][0]);
                         string op = baanparser.BomMap[record.Key][1];
                         string desc = baanparser.BomMap[record.Key][2];
+                        if (desc.Length < 18)
+                            desc = desc.PadRight(18);
                         string refdes = baanparser.BomMap[record.Key][3];
                         string bomqty = baanparser.BomMap[record.Key][4];
                         Bom.Add(record.Key, Tuple.Create(pn, op, desc, refdes, bomqty));
@@ -113,6 +115,8 @@ namespace Methods_Console
                     string pn = StripPrefix(agileparser.BomMap[record.Key][0]);
                     string op = null;
                     string desc = agileparser.BomMap[record.Key][1].Length <= 30 ? agileparser.BomMap[record.Key][1] : agileparser.BomMap[record.Key][1].Substring(0,30);
+                    if (desc.Length < 18)
+                        desc = desc.PadRight(18);
                     string refdes = agileparser.BomMap[record.Key][2];
                     string bomqty = agileparser.BomMap[record.Key][3];
                     Bom.Add(record.Key, Tuple.Create(pn, op, desc, refdes, bomqty));

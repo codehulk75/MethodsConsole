@@ -14,5 +14,8 @@
     <Setting Name="SmtTwoTaskNumber" Type="System.String" Scope="Application">
       <Value Profile="(Default)">B102;242;2100;9212</Value>
     </Setting>
+    <Setting Name="SmtMachines" Type="System.String" Scope="Application">
+      <Value Profile="(Default)">FZ60XC;GC-60_1;GC-60_2;GI-14;GX-11</Value>
+    </Setting>
   </Settings>
 </SettingsFile>

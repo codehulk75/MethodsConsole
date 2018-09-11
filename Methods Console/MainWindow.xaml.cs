@@ -44,13 +44,15 @@ namespace Methods_Console
         List<Label> lstProgDateLabels = new List<Label>();
         List<Button> lstAddProgramButtons = new List<Button>();
         List<Button> lstRemoveProgramButtons = new List<Button>();
-        Dictionary<int, string> dictMachines = new Dictionary<int, string>();
+        SortedDictionary<int, string> dictMachines = new SortedDictionary<int, string>();
+        public List<string> MachineNames { get; private set; }
         public MainWindow()
         {
             thisProgram = Assembly.GetEntryAssembly();
             thisProgramName = thisProgram.GetName();
             thisProgramVersion = thisProgramName.Version;
             InitializeComponent();
+            MachineNames = Properties.Settings.Default.SmtMachines.Split(';').ToList();
             System.IO.Directory.CreateDirectory(@"C:\BaaN-DAT");
             InitializeThemeColors();
             try
@@ -67,6 +69,12 @@ namespace Methods_Console
             {
                 SetTheme(args.Theme, borderbrushnum);
             };
+            int mnum = 0;
+            foreach(string machine in MachineNames)
+            {
+                dictMachines.Add(mnum, machine);
+                ++mnum;
+            }
             textBoxBom.IsReadOnly = true;
             textBoxBomRev.IsReadOnly = true;
             textBoxBomDate.IsReadOnly = true;
@@ -79,11 +87,6 @@ namespace Methods_Console
             tbLoadingInsTwo.Visibility = Visibility.Hidden;
             btnCreate.Visibility = Visibility.Hidden;
             btnFlipLine.Visibility = Visibility.Hidden;
-            dictMachines.Add(0, "FZ60XC");
-            dictMachines.Add(1, "GC-60_1");
-            dictMachines.Add(2, "GC-60_2");
-            dictMachines.Add(3, "GI-14");
-            dictMachines.Add(4, "GX-11");
             lstProgTextBoxes.Add(textBoxProg1);
             lstProgTextBoxes.Add(textBoxProg2);
             lstProgTextBoxes.Add(textBoxProg3);
@@ -151,11 +154,10 @@ namespace Methods_Console
             foreach(ComboBox cb in lstMachComboBoxes)
             {
                 cb.Visibility = Visibility.Hidden;
-                cb.Items.Add(dictMachines[0]);
-                cb.Items.Add(dictMachines[1]);
-                cb.Items.Add(dictMachines[2]);
-                cb.Items.Add(dictMachines[3]);
-                cb.Items.Add(dictMachines[4]);
+                foreach(var machine in dictMachines)
+                {
+                    cb.Items.Add(machine.Value);
+                }
                 cb.SelectedIndex = 0;
             }
             foreach (Label lb in lstProgDateLabels)
@@ -471,7 +473,17 @@ namespace Methods_Console
                 }
                 else
                 {
-                    failedMachineDetection.Add(parser.ProgramName);
+                    bool bFound = false;
+                    foreach (string machine in MachineNames)
+                    {
+                        if (filename.Contains(machine))
+                        {
+                            parser.MachineName = machine;
+                            bFound = true;
+                        }
+                    }
+                    if(bFound == false)
+                        failedMachineDetection.Add(parser.ProgramName);
                 }
             }
             if (failedMachineDetection.Count == 0 && failedPassDetection.Count == 0)
@@ -1313,6 +1325,16 @@ namespace Methods_Console
         private void btnFlipLine_Click(object sender, RoutedEventArgs e)
         {
             SwapUIBoxes();
+        }
+
+        private void comparebutton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Not yet implemented. Coming soon.", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void famcheckbutton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Not yet implemented. Coming soon.", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }
