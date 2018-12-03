@@ -310,6 +310,16 @@ namespace Methods_Console
                 textBoxBomRev.Visibility = Visibility.Visible;
                 textBoxBomDate.Visibility = Visibility.Visible;
             }
+            else
+            {
+                Bom = null;
+                textBoxBom.Text = "Assembly: ";
+                textBoxBomRev.Text = "";
+                textBoxBomDate.Text = "";
+                textBoxBom.Visibility = Visibility.Visible;
+                textBoxBomRev.Visibility = Visibility.Visible;
+                textBoxBomDate.Visibility = Visibility.Visible;
+            }
         }
 
         private void PrepareSetupSheet()
@@ -339,7 +349,8 @@ namespace Methods_Console
         {
             int i = 0;
             bool bHasTwoPasses = false;
-            btnCreate.Visibility = Visibility.Visible;
+            if(Bom != null)
+                btnCreate.Visibility = Visibility.Visible;
             labelLoadingOne.Visibility = Visibility.Visible;
             tbLoadingInsOne.Visibility = Visibility.Visible;
 
@@ -1320,6 +1331,8 @@ namespace Methods_Console
         private void textBoxBom_MouseDoubleClick(object sender, MouseButtonEventArgs e)
         {
             LoadBOM();
+            if (Bom != null)
+                btnCreate.Visibility = Visibility.Visible;
         }
 
         private void btnFlipLine_Click(object sender, RoutedEventArgs e)
@@ -1329,12 +1342,132 @@ namespace Methods_Console
 
         private void comparebutton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Not yet implemented. Coming soon.", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+            List<Ci2Parser> oldCi2s = new List<Ci2Parser>();
+            List<Ci2Parser> newCi2s = new List<Ci2Parser>();
+            SetupSheetParser oldSsParser = null;
+            SetupSheetParser newSsParser = null;
+
+            ///Load old ci2s
+            ///
+            Microsoft.Win32.OpenFileDialog oldCi2dlg = new Microsoft.Win32.OpenFileDialog();
+            oldCi2dlg.DefaultExt = ".ci2";
+            oldCi2dlg.Filter = "Old Universal Exports|*.ci2|All Files|*.*";
+            oldCi2dlg.Title = "Load the Old Program Exports";
+            oldCi2dlg.Multiselect = true;
+            bool? result = oldCi2dlg.ShowDialog();
+            if (result == true)
+            {
+                string[] files = oldCi2dlg.FileNames;
+                foreach (var filename in files)
+                {
+                    FileParserFactory factory = new Ci2ParserFactory(filename);
+                    Ci2Parser parser = (Ci2Parser)factory.GetFileParser();
+                    if (parser != null)
+                    {
+                        if (!parser.IsValid)
+                        {
+                            MessageBox.Show("Could not create ci2 export object. Check input files and try again.", "comparebutton_Click()",
+                                MessageBoxButton.OK, MessageBoxImage.Error);
+                            return;
+                        }
+                        oldCi2s.Add(parser);
+                    }
+                }
+                ///Load old setup sheet
+                ///
+                Microsoft.Win32.OpenFileDialog oldSetupDlg = new Microsoft.Win32.OpenFileDialog();
+                oldSetupDlg.DefaultExt = ".rtf";
+                oldSetupDlg.Filter = "Old Setup Sheet|*.rtf|All Files|*.*";
+                oldSetupDlg.Title = "Load the Old Setup Sheet";
+                bool? result2 = oldSetupDlg.ShowDialog();
+                if (result2 == true)
+                {
+                    FileParserFactory factory = new SetupSheetParserFactory(oldSetupDlg.FileName);
+                    oldSsParser = (SetupSheetParser)factory.GetFileParser();
+                    if (!oldSsParser.IsValid)
+                    {
+                        MessageBox.Show("Could not create setup sheet object. Check input files and try again.", "comparebutton_Click()",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("bye!", "Bye", MessageBoxButton.OK, MessageBoxImage.None);
+                    return;
+                }
+
+                //
+                //Load new ci2s
+                Microsoft.Win32.OpenFileDialog newCi2dlg = new Microsoft.Win32.OpenFileDialog();
+                newCi2dlg.DefaultExt = ".ci2";
+                newCi2dlg.Filter = "New Universal Exports|*.ci2|All Files|*.*";
+                newCi2dlg.Title = "Load the New Program Exports";
+                newCi2dlg.Multiselect = true;
+                bool? result3 = newCi2dlg.ShowDialog();
+                if (result3 == true)
+                {
+                    string[] files2 = newCi2dlg.FileNames;
+                    foreach (var filename in files2)
+                    {
+                        FileParserFactory factory = new Ci2ParserFactory(filename);
+                        Ci2Parser parser = (Ci2Parser)factory.GetFileParser();
+                        if (parser != null)
+                        {
+                            if (!parser.IsValid)
+                            {
+                                MessageBox.Show("Could not create ci2 export object. Check input files and try again.", "comparebutton_Click()",
+                                    MessageBoxButton.OK, MessageBoxImage.Error);
+                                return;
+                            }
+                            newCi2s.Add(parser);
+                        }
+                    }
+                }
+                else
+                {
+                    MessageBox.Show("bye!", "Bye", MessageBoxButton.OK, MessageBoxImage.None);
+                    return;
+                }
+                ///Load new setup sheet
+                ///
+                Microsoft.Win32.OpenFileDialog newSetupDlg = new Microsoft.Win32.OpenFileDialog();
+                newSetupDlg.DefaultExt = ".rtf";
+                newSetupDlg.Filter = "New Setup Sheet|*.rtf|All Files|*.*";
+                newSetupDlg.Title = "Load the New Setup Sheet";
+                bool? result4 = newSetupDlg.ShowDialog();
+                if (result4 == true)
+                {
+                    FileParserFactory factory = new SetupSheetParserFactory(newSetupDlg.FileName);
+                    newSsParser = (SetupSheetParser)factory.GetFileParser();
+                    if (!newSsParser.IsValid)
+                    {
+                        MessageBox.Show("Could not create setup sheet object. Check input files and try again.", "comparebutton_Click()",
+                            MessageBoxButton.OK, MessageBoxImage.Error);
+                        return;
+                    }
+
+                }
+                else
+                {
+                    MessageBox.Show("bye!", "Bye", MessageBoxButton.OK, MessageBoxImage.None);
+                    return;
+                }
+            }
+            else
+                return;
+            ///Do the Compare
+            ///
+            ExportAndSetupComparer Comparer = new ExportAndSetupComparer(oldSsParser, newSsParser, oldCi2s, newCi2s);
+            Comparer.CompareSetupSheets();
+            if(Comparer.Valid)
+                Comparer.SaveResults();
         }
 
         private void famcheckbutton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Not yet implemented. Coming soon.", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+            MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

@@ -302,11 +302,13 @@ namespace Methods_Console
                     }
                     if (refdesInput.Count == 0)
                         strTempLine = strTempLine.TrimEnd(',');
-                    strTempLine += "" + Environment.NewLine + "";
-                    rdOutput.Add(@"\par \tab \tab " + strTempLine);
+                    //Trying to debug extra newline in multiline handplace ref des part
+                    //
+                    //strTempLine += Environment.NewLine;
+                    rdOutput.Add(@"\par \tab \tab \tab " + strTempLine);
                 }
             }
-            strRds = string.Join("" + Environment.NewLine + "", rdOutput);
+            strRds = string.Join(Environment.NewLine, rdOutput);
             return strRds;
         }
         private void WriteDupPartsHeader()
@@ -915,36 +917,42 @@ namespace Methods_Console
                 }
                 ++exportcounter;
             }
-            if(bFirstPassHandWritten == false && !bAgile2ndPass)
+            if(bFirstPassHandWritten == false && !bAgile2ndPass && Bom.HasRouting)
             {
                 WriteHandPlaceOneSection();
             }
-            if (bAgile2ndPass)
+            if (bAgile2ndPass || (!bHasTwoPasses && !Bom.HasRouting))
             {
+                if (!bAgile2ndPass)
+                    WriteMidProgramFooterHeader(true);
                 WriteAgileHpSection();
-                foreach(string line in lst2ndPassParts)
+                if (bAgile2ndPass)
                 {
-                    if (line.Equals(strNewProgMarker))
+                    foreach (string line in lst2ndPassParts)
                     {
-                        WriteMidProgramFooterHeader(true);
-                        CurrentLineNumber = 9;
-                        continue;
-                    }                    
-                    else
-                    {
-                        if (CurrentLineNumber >= EndOfPage - 1)
+                        if (line.Equals(strNewProgMarker))
                         {
                             WriteMidProgramFooterHeader(true);
+                            CurrentLineNumber = 9;
+                            continue;
                         }
-                            using (StreamWriter writer = new StreamWriter(FullPath, true))
+                        else
                         {
-                            writer.WriteLine(line);
-                            ++CurrentLineNumber;
+                            if (CurrentLineNumber >= EndOfPage - 1)
+                            {
+                                WriteMidProgramFooterHeader(true);
+                            }
+                            using (StreamWriter writer = new StreamWriter(FullPath, true))
+                            {
+                                writer.WriteLine(line);
+                                ++CurrentLineNumber;
+                            }
                         }
                     }
-                }                      
-                WriteMidProgramFooterHeader(true);
-                WriteHandPlaceHeader(PassesList[1]);
+                    WriteMidProgramFooterHeader(true);
+                    WriteHandPlaceHeader(PassesList[1]);
+                }
+
             }
             if(bHasTwoPasses && Bom.HasRouting)
                 WriteHandPlaceTwoSection();               
@@ -1235,21 +1243,23 @@ namespace Methods_Console
                     Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
                     if (tBomPart != null)
                         bRds = new List<string>(tBomPart.Item2.Split(',').OrderBy(x => x));
-
+                    if (routeStep.Value.Key.Equals("AGILE_POST") && tBomPart == null)
+                        continue;
                     foreach (Ci2Parser export in ProgramList)
                     {
-                            if (export.Refdesmap.ContainsKey(part))
-                                pRds.AddRange(new List<string>(export.Refdesmap[part].ElementAt(0).Value.OrderBy(x => x))); 
+                        if (export.Refdesmap.ContainsKey(part))
+                            pRds.AddRange(new List<string>(export.Refdesmap[part].ElementAt(0).Value.OrderBy(x => x))); 
                     }
                     strProgramQty = pRds.Count.ToString();
                     pRds.Sort();
                     if (!pRds.SequenceEqual(bRds))
                     {
-                        strError = "<--Ref Des Mismatch!!";
+                        if(!bRds.Contains("No Ref Des"))
+                            strError = "<--Ref Des Mismatch!!";
                     }
                     int ibomqty = 0;
                     if(tBomPart != null)
-                        ibomqty = Convert.ToInt32(Math.Round(Convert.ToDouble(tBomPart.Item3)));
+                        ibomqty = Convert.ToInt32(Math.Ceiling(Convert.ToDouble(tBomPart.Item3)));
                     int iprogqty = Convert.ToInt32(strProgramQty);
                     if (ibomqty == 0)
                         ++iBomTotal;
@@ -1294,18 +1304,14 @@ namespace Methods_Console
             SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> RouteMap = new SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>>();
             KeyValuePair<string, List<Tuple<string, string, string>>> smtStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_SMT", new List<Tuple<string, string, string>>());
             KeyValuePair<string, List<Tuple<string, string, string>>> postStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_POST", new List<Tuple<string, string, string>>());
-            KeyValuePair<string, List<Tuple<string, string, string>>> zeroqtyStep = new KeyValuePair<string, List<Tuple<string, string, string>>>("AGILE_ZERO_QTY", new List<Tuple<string, string, string>>());
             RouteMap.Add("0", smtStep);
             RouteMap.Add("1", postStep);
-            RouteMap.Add("2", zeroqtyStep);
             foreach (var bomline in Bom.Bom)
             {
-                if(!bomline.Value.Item4.Equals("NO REF") && !bomline.Value.Item5.Equals("0"))
+                if(!bomline.Value.Item4.Equals("No Ref Des") && !bomline.Value.Item4.Equals("Zero Qty"))
                     RouteMap["0"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
-                else if(bomline.Value.Item4.Equals("NO REF") && !bomline.Value.Item5.Equals("0"))
+                else 
                     RouteMap["1"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
-                else
-                    RouteMap["2"].Value.Add(new Tuple<string, string, string>(bomline.Value.Item1, bomline.Value.Item4, bomline.Value.Item5));
             }
             ///Before returning, remove the route steps with empty Lists in the key value pair
             ///
