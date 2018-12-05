@@ -27,6 +27,7 @@ namespace Methods_Console
         public string OpCode { get; set; }
         public string DateCreated { get; private set; }
         public bool IsValid { get; private set; }
+        public int CircuitNum { get; private set; }
         public List<string> Lines { get; private set; }
         public Dictionary<string, Dictionary<string, List<string>>> Refdesmap { get; private set; }
         public Dictionary<string, List<string>> Feedermap { get; private set; }
@@ -52,6 +53,7 @@ namespace Methods_Console
             PlacementMap = new Dictionary<string, List<string>>();
             MainCircuitName = null;
             OpCode = null;
+            CircuitNum = 1;
             LoadFile();
             ParseFile();
             SetValid();

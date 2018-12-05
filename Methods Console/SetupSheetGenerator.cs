@@ -978,6 +978,10 @@ namespace Methods_Console
                 partnum = feederItem.Key;
                 feeder = feederItem.Value[0];
 
+                ///Sometimes there are feeders assigned to a slot that are bypassed, don't list those
+                if (!export.Refdesmap.ContainsKey(partnum))
+                    continue;
+
                 List<Tuple<string, string, string, string, string>> tBomInfo = FindInBom(feederItem.Key);
                 if (tBomInfo.Count == 0)
                     desc = "*****PART NOT IN BOM*****";

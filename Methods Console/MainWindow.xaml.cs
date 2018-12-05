@@ -312,13 +312,15 @@ namespace Methods_Console
             }
             else
             {
-                Bom = null;
-                textBoxBom.Text = "Assembly: ";
-                textBoxBomRev.Text = "";
-                textBoxBomDate.Text = "";
-                textBoxBom.Visibility = Visibility.Visible;
-                textBoxBomRev.Visibility = Visibility.Visible;
-                textBoxBomDate.Visibility = Visibility.Visible;
+                if(Bom == null)
+                {
+                    textBoxBom.Text = "Assembly: ";
+                    textBoxBomRev.Text = "";
+                    textBoxBomDate.Text = "";
+                    textBoxBom.Visibility = Visibility.Visible;
+                    textBoxBomRev.Visibility = Visibility.Visible;
+                    textBoxBomDate.Visibility = Visibility.Visible;
+                }
             }
         }
 
@@ -1332,7 +1334,13 @@ namespace Methods_Console
         {
             LoadBOM();
             if (Bom != null)
+            {
                 btnCreate.Visibility = Visibility.Visible;
+                btnCreate.IsEnabled = true;
+            }
+            else
+                btnCreate.IsEnabled = false;
+                
         }
 
         private void btnFlipLine_Click(object sender, RoutedEventArgs e)
@@ -1466,6 +1474,11 @@ namespace Methods_Console
         }
 
         private void famcheckbutton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+
+        private void bomcomparebutton_Click(object sender, RoutedEventArgs e)
         {
             MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
         }
