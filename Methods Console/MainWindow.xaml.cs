@@ -1480,7 +1480,9 @@ namespace Methods_Console
 
         private void bomcomparebutton_Click(object sender, RoutedEventArgs e)
         {
-            MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+            //MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+            BomCompareWindow bcwin = new BomCompareWindow();
+            bcwin.Show();
         }
     }
 }

@@ -79,6 +79,9 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
+    <Compile Include="BomCompareWindow.xaml.cs">
+      <DependentUpon>BomCompareWindow.xaml</DependentUpon>
+    </Compile>
     <Compile Include="ExportAndSetupComparer.cs" />
     <Compile Include="ProgressWindow.xaml.cs">
       <DependentUpon>ProgressWindow.xaml</DependentUpon>
@@ -86,6 +89,10 @@
     <Compile Include="SetupSheetGenerator.cs" />
     <Compile Include="SetupSheetParser.cs" />
     <Compile Include="SetupSheetParserFactory.cs" />
+    <Page Include="BomCompareWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Page Include="MainWindow.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
