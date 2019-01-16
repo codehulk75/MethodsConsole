@@ -777,6 +777,8 @@ namespace Methods_Console
         }
         private string GetOpCode(string strPass)
         {
+            ///return on first instance of finding valid opcode stored in config.exe when it matches task code
+            ///
             string opcode = null;
             foreach (string op in Bom.RouteList)
             {
@@ -788,6 +790,8 @@ namespace Methods_Console
                         if(task.Equals(currTask))
                         {
                             opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            if(!string.IsNullOrEmpty(opcode))
+                                return opcode;
                             break;
                         }
                     }
@@ -799,6 +803,8 @@ namespace Methods_Console
                         if (task.Equals(currTask))
                         {
                             opcode = op.Split(new char[] { ':' }, StringSplitOptions.RemoveEmptyEntries)[0];
+                            if (!string.IsNullOrEmpty(opcode))
+                                return opcode;
                             break;
                         }
                     }

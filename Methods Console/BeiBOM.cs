@@ -26,7 +26,7 @@ namespace Methods_Console
         public Dictionary<string, string> OpByRefDict { get; private set; }
         
         //
-        //Key = '<Findnum>:<Sequence>', Tuple.Item1=Part Number, Item2=Operation, Item3=Description, Item4=comma-separated ref des's, Item5=BOM qty
+        //Key = 'Findnum:Sequence', Value = Tuple.Item1=Part Number, Item2=Operation, Item3=Description, Item4=comma-separated ref des's, Item5=BOM qty
         //-- Item2 (operation) is null for Agile BOMs
         public Dictionary<string, Tuple<string, string, string, string,string>> Bom { get; private set; } 
 

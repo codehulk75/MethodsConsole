@@ -142,6 +142,10 @@ namespace Methods_Console
                             WriteFeederChanges(writer);
                         if (lstSetupMachineChanges.Count > 0 || lstSetupSlotChanges.Count > 0)
                             WriteLocationChanges(writer);
+                        if (NewParser.FirstPassPnDups.Count > 0)
+                            WriteFirstPassPnDups(writer);
+                        if (NewParser.SecondPassPnDups.Count > 0)
+                            WriteSecondPassPnDups(writer);
                         WriteHandPlaceChanges(writer);
                         if(lstSetupRdAdds.Count > 0 || lstSetupRdDeletes.Count > 0 || lstSetupRdChangedPartNum.Count > 0)
                         {
@@ -448,7 +452,7 @@ namespace Methods_Console
                 + "                                               \\ `\\___/\\ \\____\\\\ \\_\\  \\ \\_\\ \\_\\  \\/`____ \\  " + Environment.NewLine
                 + "                                                `\\/__/  \\/____/ \\/_/   \\/_/\\/_/   `/___/> \\ " + Environment.NewLine
                 + "                                                                                     /\\___/ " + Environment.NewLine
-                + "                                                        Craig Thomson 2018           \\/__/  " + Environment.NewLine
+                + "                                                        Craig Thomson 2019           \\/__/  " + Environment.NewLine
                 + "																												    " + Environment.NewLine;
 
             return banner;
@@ -572,6 +576,46 @@ namespace Methods_Console
                 writer.WriteLine("New : " + NewParser.SecondPassPnDict[pn].FirstOrDefault() + Environment.NewLine);
             }
         }
+        private void WriteFirstPassPnDups(StreamWriter writer)
+        {
+            writer.WriteLine(Environment.NewLine + Environment.NewLine);
+            writer.WriteLine("****************************************************************");
+            writer.WriteLine("*  PART NUMBER(S) FOUND IN MORE THAN ONE LOCATION ON 1ST PASS  *");
+            writer.WriteLine("****************************************************************" + Environment.NewLine);
+            writer.WriteLine("The following part numbers were found listed more than once on 1st pass."
+                            + Environment.NewLine + "Please review each to verify it is not an error." + Environment.NewLine);
+
+            writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-10}{3,-25}", "Part Number", "Feeder", "1st Location Found", "Other Location(s)"));
+            writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-10}{3,-25}", "===========", "======", "==================", "================="));
+            foreach (var entry in NewParser.FirstPassPnDups)
+            {
+                string originalLocation = NewParser.FirstPassPnDict[entry.Key][2] + " " + NewParser.FirstPassPnDict[entry.Key][3];
+                for (int i=0; i < NewParser.FirstPassPnDups[entry.Key].Count; i += 3)
+                {
+                    writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-20}{3,-25}", entry.Key, entry.Value[i], originalLocation, entry.Value[i+2]));
+                }
+            }
+        }
+        private void WriteSecondPassPnDups(StreamWriter writer)
+        {
+            writer.WriteLine(Environment.NewLine + Environment.NewLine);
+            writer.WriteLine("****************************************************************");
+            writer.WriteLine("*  PART NUMBER(S) FOUND IN MORE THAN ONE LOCATION ON 2ND PASS  *");
+            writer.WriteLine("****************************************************************" + Environment.NewLine);
+            writer.WriteLine("The following part numbers were found listed more than once on 2nd pass."
+                            + Environment.NewLine + "Please review each to verify it is not an error." + Environment.NewLine);
+
+            writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", "Part Number", "Feeder", "1st Location Found", "Other Location(s)"));
+            writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", "===========", "======", "==================", "================="));
+            foreach (var entry in NewParser.SecondPassPnDups)
+            {
+                string originalLocation = NewParser.SecondPassPnDict[entry.Key][2] + " " + NewParser.SecondPassPnDict[entry.Key][3];
+                for (int i = 0; i < NewParser.SecondPassPnDups[entry.Key].Count; i += 3)
+                {               
+                    writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", entry.Key, entry.Value[i], originalLocation, entry.Value[i + 2]));
+                }
+            }
+        }
 
         private void WriteLocationChanges(StreamWriter writer)
         {
@@ -657,13 +701,7 @@ namespace Methods_Console
                                            where OldParser.SecondPassRefDesDict.ContainsKey(rd) && OldParser.SecondPassRefDesDict[rd][3].Equals("Hand Place")
                                            orderby rd ascending
                                            select rd;
-            //var queryHandPlaceChangedPass = from rd in lstSetupPassChanges
-            //                                where ((OldParser.FirstPassRefDesDict.ContainsKey(rd) && OldParser.FirstPassRefDesDict[rd][3].Equals("Hand Place"))
-            //                                || (OldParser.SecondPassRefDesDict.ContainsKey(rd) && OldParser.SecondPassRefDesDict[rd][3].Equals("Hand Place")))
-            //                                && ((NewParser.FirstPassRefDesDict.ContainsKey(rd) && NewParser.FirstPassRefDesDict[rd][3].Equals("Hand Place"))
-            //                                || (NewParser.SecondPassRefDesDict.ContainsKey(rd) && NewParser.SecondPassRefDesDict[rd][3].Equals("Hand Place")))
-            //                                orderby rd ascending
-            //                                select rd; 
+
 
             if(queryFirstPassHpAdds.ToList().Count > 0 || querySecondPassHpAdds.ToList().Count > 0)
             {
@@ -722,34 +760,6 @@ namespace Methods_Console
                     }
                 }
             }
-            //if (queryHandPlaceChangedPass.ToList().Count > 0)
-            //{
-            //    writer.WriteLine(Environment.NewLine + Environment.NewLine);
-            //    writer.WriteLine("*************************************");
-            //    writer.WriteLine("*    HANDPLACE PARTS MOVED PASS     *");
-            //    writer.WriteLine("*************************************" + Environment.NewLine);
-            //    writer.WriteLine(string.Format("{0,-22}{1,-22}{2,-22}{3,-22}", "Ref", @"P\N", "Old Pass", "New Pass"));
-            //    writer.WriteLine(string.Format("{0,-22}{1,-22}{2,-22}{3,-22}", "===", "===", "========", "========"));
-            //    string oldpass = null;
-            //    string newpass = null;
-            //    string pn = null;
-            //    foreach(var rd in queryHandPlaceChangedPass)
-            //    {
-            //        if (OldParser.FirstPassRefDesDict.ContainsKey(rd))
-            //        {
-            //            oldpass = "1st Pass";
-            //            newpass = "2nd Pass";
-            //            pn = OldParser.FirstPassRefDesDict[rd][0];
-            //        }
-            //        else
-            //        {
-            //            oldpass = "2nd Pass";
-            //            newpass = "1st Pass";
-            //            pn = OldParser.SecondPassRefDesDict[rd][0];
-            //        }
-            //        writer.WriteLine(string.Format("{0,-22}{1,-22}{2,-22}{3,-22}", rd, pn, oldpass, newpass));
-            //    }
-            //}
             writer.WriteLine();
             writer.WriteLine();
         } 

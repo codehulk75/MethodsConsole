@@ -23,7 +23,9 @@ namespace Methods_Console
         public SortedDictionary<string, List<string>> FirstPassRefDesDict { get; private set; }
         public SortedDictionary<string, List<string>> SecondPassRefDesDict { get; private set; }
         public SortedDictionary<string, List<string>> FirstPassPnDict { get; private set; }
+        public SortedDictionary<string, List<string>> FirstPassPnDups { get; private set; }
         public SortedDictionary<string, List<string>> SecondPassPnDict { get; private set; }
+        public SortedDictionary<string, List<string>> SecondPassPnDups { get; private set; }
 
 
         public SetupSheetParser(string filepath)
@@ -33,8 +35,10 @@ namespace Methods_Console
             FileType = Path.GetExtension(FullFilePath).ToLower();
             FirstPassRefDesDict = new SortedDictionary<string, List<string>>();
             FirstPassPnDict = new SortedDictionary<string, List<string>>();
+            FirstPassPnDups = new SortedDictionary<string, List<string>>();
             SecondPassRefDesDict = new SortedDictionary<string, List<string>>();
             SecondPassPnDict = new SortedDictionary<string, List<string>>();
+            SecondPassPnDups = new SortedDictionary<string, List<string>>();
             DuplicateRefs = new SortedDictionary<string, List<string>>();
             Lines = new List<string>();
             LoadFile();
@@ -66,8 +70,10 @@ namespace Methods_Console
             IsValid = false;
             FirstPassRefDesDict.Clear();
             FirstPassPnDict.Clear();
+            FirstPassPnDups.Clear();
             SecondPassRefDesDict.Clear();
             SecondPassPnDict.Clear();
+            SecondPassPnDups.Clear();
             Lines.Clear();
         }
 
@@ -230,11 +236,38 @@ namespace Methods_Console
                     part = m.Groups[1].Value;
                     string feeder = GetFeederType(line);
                     if (pass.Equals("SMT 1"))
-                        FirstPassPnDict.Add(part, new List<string>(new string[] { feeder, pass, machine }));
+                    {
+                        if (!FirstPassPnDict.ContainsKey(part))
+                        {
+                            FirstPassPnDict.Add(part, new List<string>(new string[] { feeder, pass, machine }));
+                            tempPart = part;
+                            bGetLocation = true;
+                        }
+                        else
+                        {
+                            if (!FirstPassPnDups.ContainsKey(part))
+                                FirstPassPnDups.Add(part, new List<string>(new string[] { feeder, pass, machine }));
+                            else
+                                FirstPassPnDups[part].AddRange(new List<string>(new string[] { feeder, pass, machine }));
+                        }
+                            
+                    }                      
                     else
-                        SecondPassPnDict.Add(part, new List<string>(new string[] { feeder, pass, machine }));
-                    tempPart = part;
-                    bGetLocation = true;     
+                    {
+                        if (!SecondPassPnDict.ContainsKey(part))
+                        {
+                            SecondPassPnDict.Add(part, new List<string>(new string[] { feeder, pass, machine }));
+                            tempPart = part;
+                            bGetLocation = true;
+                        }
+                        else
+                        {
+                            if (!SecondPassPnDups.ContainsKey(part))
+                                SecondPassPnDups.Add(part, new List<string>(new string[] { feeder, pass, machine }));
+                            else
+                                SecondPassPnDups[part].AddRange(new List<string>(new string[] { feeder, pass, machine }));
+                        }                           
+                    }                         
                 }
             }
 

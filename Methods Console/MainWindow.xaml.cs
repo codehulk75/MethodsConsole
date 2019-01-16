@@ -251,6 +251,13 @@ namespace Methods_Console
                 famcheckbutton.Foreground = Brushes.White;
                 themebutton.Foreground = Brushes.White;
                 comparebutton.Foreground = Brushes.White;
+                bomcomparebutton.Foreground = Brushes.White;
+                foreach(var lbl in lstProgDateLabels)
+                {
+                    lbl.Foreground = Brushes.White;
+                }
+                labelLoadingOne.Foreground = Brushes.White;
+                labelLoadingTwo.Foreground = Brushes.White;
             }
             else
             {
@@ -259,6 +266,13 @@ namespace Methods_Console
                 famcheckbutton.Foreground = Brushes.Black;
                 themebutton.Foreground = Brushes.Black;
                 comparebutton.Foreground = Brushes.Black;
+                bomcomparebutton.Foreground = Brushes.Black;
+                foreach (var lbl in lstProgDateLabels)
+                {
+                    lbl.Foreground = Brushes.Black;
+                }
+                labelLoadingOne.Foreground = Brushes.Black;
+                labelLoadingTwo.Foreground = Brushes.Black;
             }
         }
 
