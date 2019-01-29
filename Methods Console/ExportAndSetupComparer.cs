@@ -585,14 +585,14 @@ namespace Methods_Console
             writer.WriteLine("The following part numbers were found listed more than once on 1st pass."
                             + Environment.NewLine + "Please review each to verify it is not an error." + Environment.NewLine);
 
-            writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-10}{3,-25}", "Part Number", "Feeder", "1st Location Found", "Other Location(s)"));
-            writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-10}{3,-25}", "===========", "======", "==================", "================="));
+            writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", "Part Number", "Feeder", "1st Location Found", "Other Location(s)"));
+            writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", "===========", "======", "==================", "================="));
             foreach (var entry in NewParser.FirstPassPnDups)
             {
                 string originalLocation = NewParser.FirstPassPnDict[entry.Key][2] + " " + NewParser.FirstPassPnDict[entry.Key][3];
                 for (int i=0; i < NewParser.FirstPassPnDups[entry.Key].Count; i += 3)
                 {
-                    writer.WriteLine(string.Format("{0,-25}{1,-25}{2,-20}{3,-25}", entry.Key, entry.Value[i], originalLocation, entry.Value[i+2]));
+                    writer.WriteLine(string.Format("{0,-25}{1,-20}{2,-20}{3,-25}", entry.Key, entry.Value[i], originalLocation, entry.Value[i+2]));
                 }
             }
         }
