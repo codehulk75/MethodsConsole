@@ -18,9 +18,9 @@
         <StackPanel Grid.Row="0" Grid.Column="0" HorizontalAlignment="Left" Height="360" Margin="12,10,0,0" VerticalAlignment="Top" Width="335" >
             <Button x:Name="BomOneButton" Content="BOM 1" Margin="92,0,132,0" Height="40" FontWeight="Bold" FontSize="24" HorizontalContentAlignment="Center" VerticalAlignment="Center" Click="BomOneButton_Click"/>
             <TextBlock x:Name="tbBom1FileName" TextWrapping="WrapWithOverflow" Text="File: " Height="90" FontSize="16"/>
-            <TextBlock x:Name="tblkAssemblyOne" TextWrapping="WrapWithOverflow" Text="Assembly:  " Height="50" FontSize="16"/>
-            <TextBlock x:Name="tblkBom1Rev" TextWrapping="Wrap" Text="Rev:  " Height="30" FontSize="16"/>
-            <TextBlock x:Name="tblkBom1Date" TextWrapping="Wrap" Text="Date:  " Height="30" FontSize="16"/>
+            <TextBlock x:Name="tblkAssemblyOne" TextWrapping="WrapWithOverflow" Text="Assembly: " Height="50" FontSize="16"/>
+            <TextBlock x:Name="tblkBom1Rev" TextWrapping="Wrap" Text="Rev: " Height="30" FontSize="16"/>
+            <TextBlock x:Name="tblkBom1Date" TextWrapping="Wrap" Text="Date: " Height="30" FontSize="16"/>
         </StackPanel>
         <StackPanel Grid.Row="0" Grid.Column="1" HorizontalAlignment="Right" Height="360" Margin="0,10,0,0" VerticalAlignment="Top" Width="335">
             <Button x:Name="BomTwoButton" Content="BOM 2" Margin="94,0,137,0" Height="40" FontWeight="Bold" FontSize="24" VerticalAlignment="Center" Click="BomTwoButton_Click"/>

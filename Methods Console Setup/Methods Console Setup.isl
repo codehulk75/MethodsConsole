@@ -3839,9 +3839,11 @@
 		<col def="S255">ISBuildSourcePath</col>
 		<col def="I2">ISIconIndex</col>
 		<row><td>ARPPRODUCTICON.exe</td><td/><td>D:\coding\icons\Zerode-Plump-Control-Panel.ico</td><td>0</td></row>
+		<row><td>_104781CC8C2F485E992F66473B5B1651.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_1E7FE84C477F435E8EE135B4A4D374E5.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_320CF90BE7B14E31A7B13A4D9DD68590.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_567E23EDA5BC417F990A5972BB967C4E.exe</td><td/><td>C:\Users\thomsc\Documents\Visual Studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
+		<row><td>_665C7479063B4C19950B1533B8731906.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_94ED0F9924E744508C8E49BD840201E2.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_B0FB4C46505947E2ABD34A93433115BA.exe</td><td/><td>C:\Users\thomsc\Documents\Visual Studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
 		<row><td>_E372E89B3F134EE2A52CE30B2C5EE064.exe</td><td/><td>C:\Users\thomsc\documents\visual studio 2015\Projects\Methods Console\Methods Console\bin\Release\Methods Console.exe</td><td>0</td></row>
@@ -4358,7 +4360,7 @@ QwBEAF8AUgBPAE0AAQBFAHgAcAByAGUAcwBzAA==
 		<row><td>PROGRAMFILETOLAUNCHATEND</td><td>[INSTALLDIR]Methods Console.Primary output</td><td/></row>
 		<row><td>ProductCode</td><td>{A48B0495-0C6F-460B-9FF6-8EB996A52244}</td><td/></row>
 		<row><td>ProductName</td><td>Methods Console</td><td/></row>
-		<row><td>ProductVersion</td><td>2.3.0.0</td><td/></row>
+		<row><td>ProductVersion</td><td>2.4.0.0</td><td/></row>
 		<row><td>ProgressType0</td><td>install</td><td/></row>
 		<row><td>ProgressType1</td><td>Installing</td><td/></row>
 		<row><td>ProgressType2</td><td>installed</td><td/></row>
@@ -4646,7 +4648,7 @@ QwBEAF8AUgBPAE0AAQBFAHgAcAByAGUAcwBzAA==
 		<col def="s72">ActionProperty</col>
 		<col def="S72">ISDisplayName</col>
 		<row><td>{00000000-0000-0000-0000-000000000000}</td><td>***ALL_VERSIONS***</td><td></td><td></td><td>2</td><td/><td>ISFOUNDNEWERPRODUCTVERSION</td><td>ISPreventDowngrade</td></row>
-		<row><td>{1A66C8E8-960A-4C71-B165-1432ABB8B1D7}</td><td></td><td>2.2.0.0</td><td></td><td>768</td><td/><td>ISACTIONPROP1</td><td>FirstUpgrade</td></row>
+		<row><td>{1A66C8E8-960A-4C71-B165-1432ABB8B1D7}</td><td></td><td>2.3.0.0</td><td></td><td>768</td><td/><td>ISACTIONPROP1</td><td>FirstUpgrade</td></row>
 	</table>
 
 	<table name="Verb">

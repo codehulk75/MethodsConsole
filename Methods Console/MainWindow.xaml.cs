@@ -249,6 +249,7 @@ namespace Methods_Console
                 TasksText.Foreground = Brushes.White;
                 setupsheetbutton.Foreground = Brushes.White;
                 famcheckbutton.Foreground = Brushes.White;
+                famplanbutton.Foreground = Brushes.White;
                 themebutton.Foreground = Brushes.White;
                 comparebutton.Foreground = Brushes.White;
                 bomcomparebutton.Foreground = Brushes.White;
@@ -264,6 +265,7 @@ namespace Methods_Console
                 TasksText.Foreground = Brushes.Black;
                 setupsheetbutton.Foreground = Brushes.Black;
                 famcheckbutton.Foreground = Brushes.Black;
+                famplanbutton.Foreground = Brushes.Black;
                 themebutton.Foreground = Brushes.Black;
                 comparebutton.Foreground = Brushes.Black;
                 bomcomparebutton.Foreground = Brushes.Black;
@@ -1497,6 +1499,11 @@ namespace Methods_Console
             //MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
             BomCompareWindow bcwin = new BomCompareWindow();
             bcwin.Show();
+        }
+
+        private void famplanbutton_Click(object sender, RoutedEventArgs e)
+        {
+            MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
 }

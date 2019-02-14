@@ -25,8 +25,12 @@ namespace Methods_Console
         int borderbrushnum = Properties.Settings.Default.StatusBarThemeNumber;
         Dictionary<int, string> themes = new Dictionary<int, string>();
         Dictionary<int, string> borderBrushes = new Dictionary<int, string>();
+        BeiBOM BomOne;
+        BeiBOM BomTwo;
         public BomCompareWindow()
         {
+            BomOne = null;
+            BomTwo = null;
             InitializeComponent();
             InitializeThemeColors();
             try
@@ -82,17 +86,84 @@ namespace Methods_Console
 
         private void AnalyzeButton_Click(object sender, RoutedEventArgs e)
         {
+            if(BomOne != null && BomTwo != null && BomOne.IsValid && BomTwo.IsValid)
+            {
+                BOMComparer bomComparer = new BOMComparer(BomOne, BomTwo);
+                bool BomsMatch = bomComparer.CompareBomData();
+
+            }
+            else
+            {
+                MessageBox.Show("You need 2 valid BOMs to perform a BOM Compare.", "Insufficient Data", MessageBoxButton.OK, MessageBoxImage.Hand);
+            }
 
         }
 
         private void BomOneButton_Click(object sender, RoutedEventArgs e)
         {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".xls";
+            dlg.Filter = "BOM File|*.xls;*.csv;*.txt|All Files|*.*";
+            dlg.Title = "Load BOM File #1";
+            bool? result = dlg.ShowDialog();
+            if (result == true)
+            {
+                if (BomOne != null)
+                    BomOne = null;
+                BomOne = new BeiBOM(dlg.FileName);
+                if (BomOne.IsValid == false)
+                {
+                    MessageBox.Show("Invalid BOM");
+                    tbBom1FileName.Text = "File: ";
+                    tbBom1FileName.ToolTip = "";
+                    tblkAssemblyOne.Text = "Assembly: ";
+                    tblkAssemblyOne.ToolTip = "";
+                    tblkBom1Rev.Text = "Rev: ";
+                    tblkBom1Date.Text = "Date: ";
+                    BomOne = null;
+                    return;
+                }
+                tbBom1FileName.Text = "File:  " + BomOne.FileName;
+                tbBom1FileName.ToolTip = BomOne.FullFilePath;
+                tblkAssemblyOne.Text = "Assembly:  " + BomOne.AssemblyName;
+                tblkAssemblyOne.ToolTip = BomOne.AssyDescription;
+                tblkBom1Rev.Text = "Rev:  " + BomOne.Rev;
+                tblkBom1Date.Text = "Date:  " + BomOne.DateOfListing;
 
+            }
         }
-
         private void BomTwoButton_Click(object sender, RoutedEventArgs e)
         {
+            Microsoft.Win32.OpenFileDialog dlg = new Microsoft.Win32.OpenFileDialog();
+            dlg.DefaultExt = ".xls";
+            dlg.Filter = "BOM File|*.xls;*.csv;*.txt|All Files|*.*";
+            dlg.Title = "Load BOM File #2";
+            bool? result = dlg.ShowDialog();
+            if (result == true)
+            {
+                if (BomTwo != null)
+                    BomTwo = null;
+                BomTwo = new BeiBOM(dlg.FileName);
+                if (BomTwo.IsValid == false)
+                {
+                    MessageBox.Show("Invalid BOM");
+                    tbBom2FileName.Text = "File: ";
+                    tbBom2FileName.ToolTip = "";
+                    tblkAssemblyTwo.Text = "Assembly: ";
+                    tblkAssemblyTwo.ToolTip = "";
+                    tblkBom2Rev.Text = "Rev: ";
+                    tblkBom2Date.Text = "Date: ";
+                    BomTwo = null;
+                    return;
+                }
+                tbBom2FileName.Text = "File:  " + BomTwo.FileName;
+                tbBom2FileName.ToolTip = BomTwo.FullFilePath;
+                tblkAssemblyTwo.Text = "Assembly:  " + BomTwo.AssemblyName;
+                tblkAssemblyTwo.ToolTip = BomTwo.AssyDescription;
+                tblkBom2Rev.Text = "Rev:  " + BomTwo.Rev;
+                tblkBom2Date.Text = "Date:  " + BomTwo.DateOfListing;
 
+            }
         }
     }
 }

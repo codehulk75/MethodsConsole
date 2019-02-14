@@ -89,7 +89,7 @@ namespace Methods_Console
         {
             //1/29/2019 - Casa 56 setup sheet shows ref des U163 with paste pn - real pn got skipped bcuz it was Manufactured instead of
             //purchased.  Commenting out the line below and changing 'Purchased' to .* in the regex
-            //Fixes this instance but need more testing to see if it breaks other setup sheets
+            //Tested this fix with a setup sheet from every customer done in LN so far.  Should be good to make permanent.
 
             //Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
             Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty

@@ -1092,9 +1092,19 @@ namespace Methods_Console
                         strRefDesLines += @"\par \tab \tab \tab " + strTempLine;
                     }
                 }
-                //If part number has a duplicate feeder...break it off and add it to the list
+                
+                ///Before we sort, let's cheat a little bit. Using string sort for slots and tracks works here, except for Trays.
+                ///So let's turn single digit Tray slots into double digit slot by adding a zero in front.
+                ///Then we perform the sort, with string sort working fine now.  This field is not the same as the track/slot in the output
+                ///so no need to remove the zero later on.
+                ///This allows me to get away with not having to write a customer sort() just for Trays--CT 2/14/2019
+                ///
+                if (Regex.Match(track, @"Tray\s\d[a-zA-Z]").Success)
+                    track = track.Replace("Tray ", "Tray 0");
                 KeyValuePair<int, string> kv = new KeyValuePair<int, string>(slot, track);
                 tupList.Add(new Tuple<string, string, string, string, string, string, KeyValuePair<int,string>>(feederItem.Key, desc, feeder, slottrack, strQty, strRefDesLines, kv));
+                
+                //If part number has a duplicate feeder...break it off and add it to the list
                 if (feederItem.Value.Count > 4)
                 {
                     for (int i = 4; i < feederItem.Value.Count; i += 4)
@@ -1113,12 +1123,21 @@ namespace Methods_Console
                             slot = Convert.ToInt32(feederItem.Value[i+1]);
                             track = feederItem.Value[i+2];
                         }
+                        ///Before we sort, let's cheat a little bit. Using string sort for slots and tracks works here, except for Trays.
+                        ///So let's turn single digit Tray slots into double digit slot by adding a zero in front.
+                        ///Then we perform the sort, with string sort working fine now.  This field is not the same as the track/slot in the output
+                        ///so no need to remove the zero later on.
+                        ///This allows me to get away with not having to write a customer sort() just for Trays--CT 2/14/2019
+                        ///
+                        if (Regex.Match(track, @"Tray\s\d[a-zA-Z]").Success)
+                            track = track.Replace("Tray ", "Tray 0");
                         KeyValuePair<int, string> kv2 = new KeyValuePair<int, string>(slot, track);    
                         tupList.Add(new Tuple<string, string, string, string, string, string, KeyValuePair<int, string>>(feederItem.Key, desc, feeder, slottrack, strQty, "~See Other Feeder", kv2));
                         
                     }
                 }
             }
+
             ///sort by slot,track and prepare lines for printing
             var test = from tup in tupList
                        orderby tup.Item7.Key, tup.Item7.Value ascending

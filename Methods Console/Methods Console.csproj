@@ -79,7 +79,8 @@
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </ApplicationDefinition>
-    <Compile Include="AgileBOMComparer.cs" />
+    <Compile Include="AlphanumComparator.cs" />
+    <Compile Include="BOMComparer.cs" />
     <Compile Include="BomCompareWindow.xaml.cs">
       <DependentUpon>BomCompareWindow.xaml</DependentUpon>
     </Compile>

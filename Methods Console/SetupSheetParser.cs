@@ -105,12 +105,22 @@ namespace Methods_Console
                     if (!match.Success)
                         continue;
                     List<string> lstLoc = GetLocAndRd(line);
+
+
+                    ///Added filter 2/12/2019 to account for old setup sheets containing SH (Shuttle) in the higher Fuzion slots
+                    ///This is an error in JohnCo legacy software that incorrectly assumes any slot above 100 must be a shuttle
+                    ///That was only the case on older equipment.  The basically searches and replaces those incorrect SH's with SL's (Slot)
+                    ///
+                    string tempLocation = lstLoc.First();
+                    if (machine.StartsWith("F") && Regex.Match(tempLocation, @"^SH\s").Success)
+                        tempLocation = Regex.Replace(tempLocation, @"^SH\s", "SL ");
+                    
                     ///Tack on slot location to end of pn info list
                     ///
                     if (pass.Equals("SMT 1"))
-                        FirstPassPnDict[tempPart].Add(lstLoc.First());
+                        FirstPassPnDict[tempPart].Add(tempLocation);
                     else
-                        SecondPassPnDict[tempPart].Add(lstLoc.First());
+                        SecondPassPnDict[tempPart].Add(tempLocation);
                     firstRefs = lstLoc.Last();
                     bRefDesSearch = true;
                 }
@@ -228,6 +238,12 @@ namespace Methods_Console
                     {
                         machine = machine.Replace(c, string.Empty);
                     }
+                    ///added if-if-else below on 2/12/2019 to clean results file incorrectly calling out location mismatch - gc60_1 vs gc60 (s/b ==)
+                    if (machine.Equals("GI141"))
+                        machine = "GI14";
+                    else if (machine.Equals("GC601"))
+                        machine = "GC60";     
+                                       
                     continue;
                 }
                 m = rePartNumLine.Match(line);
