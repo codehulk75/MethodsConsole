@@ -41,6 +41,8 @@ namespace Methods_Console
             bool BomsMatch = false;
             InBomOneButNotInBomTwo.Clear();
             InBomTwoButNotInBomOne.Clear();
+            int BomOnePartCount = GetPartCount(BomOne);
+            int BomTwoPartCount = GetPartCount(BomTwo);
 
             foreach(var bomoneentry in BomOnePartsAndRefs)
             {
@@ -82,8 +84,19 @@ namespace Methods_Console
             using (StreamWriter writer = new StreamWriter(savedlg.FileName))
             {
                 writer.WriteLine("Methods Console - BOM Compare Module: software version " + ThisProgramVersion);
+                writer.WriteLine("BOM File 1: " + BomOne.FullFilePath);
+                writer.WriteLine("BOM File 2: " + BomTwo.FullFilePath + Environment.NewLine);
+                writer.WriteLine("{0,-14}{1,-25}{2,-25}","","BOM 1", "BOM 2");
+                writer.WriteLine("{0,-14}{1,-25}{2,-25}", "Assembly:", BomOne.AssemblyName,BomTwo.AssemblyName);
+                writer.WriteLine("{0,-14}{1,-25}{2,-25}", "Rev:", BomOne.Rev, BomTwo.Rev);
+                writer.WriteLine("{0,-14}{1,-25}{2,-25}", "Listing Date:", BomOne.DateOfListing, BomTwo.DateOfListing);
+                writer.WriteLine("{0,-14}{1,-25}{2,-25}", "Part Count:", BomOnePartCount, BomTwoPartCount);
+                writer.WriteLine(Environment.NewLine
+                    + "________________________________________________________________________________________________");
+                writer.WriteLine("{0,-14}{1,-28}{2,-25}", "", "REF DES COUNTED", "QTY READ");
+
             }
-                return BomsMatch;
+            return BomsMatch;
         }
         private SortedDictionary<string, List<string>> PopulatePartsAndRefs(BeiBOM bom)
         {
@@ -104,6 +117,17 @@ namespace Methods_Console
                 }
             }
             return PartsAndRefs;
+        }
+        private int GetPartCount(BeiBOM bom)
+        {
+            int count = 0;
+            HashSet<string> PartsList = new HashSet<string>();
+            foreach(var entry in bom.Bom)
+            {
+                PartsList.Add(entry.Value.Item1);
+            }
+            count = PartsList.Count;
+            return count; 
         }
 
     }

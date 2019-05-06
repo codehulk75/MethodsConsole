@@ -1496,9 +1496,9 @@ namespace Methods_Console
 
         private void bomcomparebutton_Click(object sender, RoutedEventArgs e)
         {
-            //MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
-            BomCompareWindow bcwin = new BomCompareWindow();
-            bcwin.Show();
+            MessageBox.Show("Not yet implemented. Coming eventually...", "Sorry :(", MessageBoxButton.OK, MessageBoxImage.Information);
+            //BomCompareWindow bcwin = new BomCompareWindow();
+            //bcwin.Show();
         }
 
         private void famplanbutton_Click(object sender, RoutedEventArgs e)

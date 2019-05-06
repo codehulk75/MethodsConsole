@@ -92,7 +92,14 @@ namespace Methods_Console
             //Tested this fix with a setup sheet from every customer done in LN so far.  Should be good to make permanent.
 
             //Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
-            Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
+            //Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
+            Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+.*)\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
+            ///Line above is another fix for the reItemInfoRow regex.  Part numbers are now coming with spaces in them, 
+            ///so, I guess we have part phrases now, not part numbers, unbelievable.
+            ///anyway the regex now has to capture the part number field and then trim it in case of leading or trailing space between separators |
+            ///See other line below, trimming strPN variable
+            ///5/2/2019
+            ///
             Regex reDate = new Regex(@"Date\s+:\s(\d{2}-\d{2}-\d{2})");
             Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
@@ -153,7 +160,10 @@ namespace Methods_Console
                     if (match.Success)
                     {   
                         string strFnSeq = match.Groups[1].Value + ":" + match.Groups[2].Value;
-                        string strPN = match.Groups[3].Value;
+                        //string strPN = match.Groups[3].Value;
+                        //testing capturing part number row with wildcard, no restriction between pipes, so need to trim
+                        //see next line
+                        string strPN = match.Groups[3].Value.Trim();
                         string strDesc = match.Groups[4].Value;
                         string strOp = match.Groups[5].Value;
                         string strBOMQty = match.Groups[6].Value.Trim();

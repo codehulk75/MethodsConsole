@@ -378,7 +378,27 @@ namespace Methods_Console
                     {
                         string strProgramQty = "0";
                         string strError = "";
-                        Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+
+
+                        ///Update 3-27-19
+                        ///Fix for BOMs that have split part numbers assigned to same op code.
+                        ///Unusual and unnecessary to have multiple of same pn assigned to same op code, but need a case for it.
+                        ///So instead of matching 1st pn for that opcode, match all then check for multiple, and if so, combine
+                        ///ref des's and add qty's before assigning to tBomPart
+                        ///
+                        Tuple<string, string, string> tBomPart = null;
+                        //Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+                        List<Tuple<string, string, string>> FoundBomParts = partInfo.FindAll(x => x.Item1.Equals(part));
+                        if (FoundBomParts.Count == 1)
+                            tBomPart = FoundBomParts.First();
+                        else if (FoundBomParts.Count > 1)
+                        {
+                            string masterRefs = string.Join(",", FoundBomParts.Select(t => t.Item2));
+                            int masterCount = masterRefs.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries).Count();
+                            tBomPart = new Tuple<string, string, string>(FoundBomParts.First().Item1, masterRefs, masterCount.ToString());
+                        }
+
+
                         if (tBomPart == null)
                             tBomPart = new Tuple<string, string, string>("0", "", "0");
                         foreach (Ci2Parser export in ProgramList)
@@ -1269,7 +1289,25 @@ namespace Methods_Console
                     string strError = "";
                     List<string> bRds = new List<string>();
                     List<string> pRds = new List<string>();
-                    Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+
+                    ///Update 3-27-19
+                    ///Fix for BOMs that have split BOM lines on a proto (same pn multiple lines).
+                    ///Unusual and unnecessary to have multiple of same pn on different lines on a proto, but need a case for it.
+                    ///So instead of matching 1st pn, match all then check for multiple, and if so, combine
+                    ///ref des's and add qty's before assigning to tBomPart
+                    ///
+                    Tuple<string, string, string> tBomPart = null;
+                    // Tuple<string, string, string> tBomPart = partInfo.FirstOrDefault(x => x.Item1.Equals(part));
+                    List<Tuple<string, string, string>> FoundBomParts = partInfo.FindAll(x => x.Item1.Equals(part));
+                    if (FoundBomParts.Count == 1)
+                        tBomPart = FoundBomParts.First();
+                    else if(FoundBomParts.Count > 1)
+                    {
+                        string masterRefs = string.Join(",", FoundBomParts.Select(t => t.Item2));
+                        int masterCount = masterRefs.Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries).Count();
+                        tBomPart = new Tuple<string, string, string>(FoundBomParts.First().Item1, masterRefs, masterCount.ToString()); 
+                    }
+
                     if (tBomPart != null)
                         bRds = new List<string>(tBomPart.Item2.Split(',').OrderBy(x => x));
                     if (routeStep.Value.Key.Equals("AGILE_POST") && tBomPart == null)
