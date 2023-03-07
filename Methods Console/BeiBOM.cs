@@ -168,7 +168,7 @@ namespace Methods_Console
             bool hasroutingitem = false;
 
             string line;
-            Regex reBomLine = new Regex(@"BILLS OF MATERIAL\s+\(MULTILEVEL\)\s+\(WITH BOM QUANTITIES\)");
+            Regex reBomLine = new Regex(@"Bill of Material\s+\(Single-Level\)\s+\(with Quantities\)");
             Regex reRoutingLine = new Regex(@"\(Including\sRouting\)");
             Regex reRoutingItem = new Regex(@"Routing Item");
             try

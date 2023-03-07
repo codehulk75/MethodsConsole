@@ -33,7 +33,7 @@ namespace Methods_Console
         public string OutputDir { get; set; }
         public string FileName { get; private set; }
         public string FullPath { get; private set; }
-        public bool bHasTwoPasses { get; private set; }
+        public bool HasTwoPasses { get; private set; }
         public SetupSheetGenerator(BeiBOM bom, List<Ci2Parser> ci2List, List<string> loadingInstructionsList)
         {
             SmtOneTasks = Properties.Settings.Default.SmtOneTaskNumber.Split(';').ToList();
@@ -61,7 +61,7 @@ namespace Methods_Console
             {
                 passHash.Add(ci2.Pass);
             }
-            bHasTwoPasses = passHash.Count > 1 ? true : false;
+            HasTwoPasses = passHash.Count > 1 ? true : false;
         }
 
         public void CreateSheet()
@@ -86,18 +86,7 @@ namespace Methods_Console
             WritePartsInProgramNotInBom();
             WritePartsInBomNotInProgramHeader();
             WritePartsInBomNotInProgramData();
-            RtfDocWriteLastLine();
-            //try
-            //{
-            //    MessageBoxResult mbres = MessageBox.Show("Done. Do you want to open the setup sheet with notepad?", "Setup Sheet Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
-            //    if (mbres == MessageBoxResult.Yes)
-            //        System.Diagnostics.Process.Start("notepad.exe", FullPath);
-            //}
-            //catch (Exception e)
-            //{
-            //    MessageBox.Show("There was a problem opening the new setup sheet.\nError = " + e.Message, "CreateBaanSetupSheet() Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            //}
-
+            RtfDocWriteLastLine();           
         }
         private void CreateAgileSetupSheet()
         {
@@ -114,17 +103,6 @@ namespace Methods_Console
             WritePartsInBomNotInProgramHeader();
             WritePartsInBomNotInProgramData();
             RtfDocWriteLastLine();
-            //try
-            //{
-            //    MessageBoxResult mbres = MessageBox.Show("Done. Do you want to open the setup sheet with notepad?", "Setup Sheet Complete", MessageBoxButton.YesNo, MessageBoxImage.Information);
-            //    if (mbres == MessageBoxResult.Yes)
-            //        System.Diagnostics.Process.Start("notepad.exe", FullPath);
-            //}
-            //catch(Exception e)
-            //{
-            //    MessageBox.Show("There was a problem opening the new setup sheet.\nError = " + e.Message, "CreateAgileSetupSheet() Error", MessageBoxButton.OK, MessageBoxImage.Exclamation);
-            //}
-
         }
         private void WritePartsInBomNotInProgramData()
         {
@@ -323,6 +301,17 @@ namespace Methods_Console
                 CurrentLineNumber += 2;
             }
         }
+        List<string> GetAltSMTCodesByPass(List<string> routingOps, string pass)
+        {
+            List<string> altsmtcodes = new List<string>();
+            Regex reSMTPass = new Regex(@"SMT (1|2)");
+            foreach(var op in routingOps)
+            {
+                if (reSMTPass.Match(op).Success && op.Contains(pass))
+                    altsmtcodes.Add(op.Split(':')[0]);
+            }
+            return altsmtcodes;
+        }
 
         private void WriteRefDesCountData()
         {
@@ -333,6 +322,12 @@ namespace Methods_Console
                 SortedDictionary<string, KeyValuePair<string, List<Tuple<string, string, string>>>> BomItemsByRouteStep = PopulateRouteBom();
                 int iBomTotal = 0, iProgTotal = 0;
                 KeyValuePair<string, List<Tuple<string, string, string>>> NoRouteStepParts = new KeyValuePair<string, List<Tuple<string, string, string>>>();
+                ///8-24-22 - CT update for LN:
+                ///Since the damn engineers love to assign smt parts to feeder setup in pfs, we will treat feeder setup as an smt step, 
+                ///and search for the alternate (Feeder Setup) opcode for smt, if this an smt op.
+                ///
+                
+
                 if (BomItemsByRouteStep.ContainsKey("0"))
                 {
                     ///Capture the parts not assigned to a route step, then remove them from the BomItems, write that section last
@@ -403,7 +398,7 @@ namespace Methods_Console
                             tBomPart = new Tuple<string, string, string>("0", "", "0");
                         foreach (Ci2Parser export in ProgramList)
                         {
-                            if (export.OpCode.Equals(routeStep.Key))
+                            if (export.OpCode.Equals(routeStep.Key) || GetAltSMTCodesByPass(Bom.RouteList, routeStep.Value.Key).Contains(export.OpCode))
                             {
                                 if (export.Refdesmap.ContainsKey(part))
                                 {
@@ -684,8 +679,10 @@ namespace Methods_Console
             List<string> lstHPLines = new List<string>();
             Dictionary<string, string> dictHpParts = new Dictionary<string, string>();
             Dictionary<string, List<string>> dictHpPartInfo = new Dictionary<string, List<string>>();
+            List<string> lstOpCodes = GetAltSMTCodesByPass(Bom.RouteList, pass);
+            string strOpCodes = string.Join("|", lstOpCodes);
             string strOpCode = GetOpCode(pass);
-            Regex reOp = new Regex(@"\b" + strOpCode + @"\b:([^,]+|\b)");
+            Regex reOp = new Regex(@"\b(?:" + strOpCodes + @")\b:([^,]+|\b)");
             foreach(var entry in OpByRefCopy)
             {
                 ///all refs were added to OpByRefCopy, but as they are writtent to output,
@@ -730,7 +727,7 @@ namespace Methods_Console
                 }
                 foreach(var tInfo in partInfo)
                 {
-                    if (tInfo.Item2.Equals(strOpCode))
+                    if (lstOpCodes.Contains(tInfo.Item2))
                     {
                         dictHpPartInfo[entry.Key].Add(tInfo.Item3);
                         dictHpPartInfo[entry.Key].Add(tInfo.Item5);
@@ -846,8 +843,8 @@ namespace Methods_Console
             string strNewProgMarker = "-new prog-";
             foreach (Ci2Parser export in ProgramList)
             {
-                bAgile2ndPass = bHasTwoPasses && export.Pass.Equals(PassesList[1]) && !Bom.HasRouting;
-                if (export.Pass.Equals(PassesList[0]) || !bHasTwoPasses)
+                bAgile2ndPass = HasTwoPasses && export.Pass.Equals(PassesList[1]) && !Bom.HasRouting;
+                if (export.Pass.Equals(PassesList[0]) || !HasTwoPasses)
                 {
                     strInstructions = LoadingList[0];
                     if (Bom.HasRouting && string.IsNullOrEmpty(export.OpCode))
@@ -855,7 +852,7 @@ namespace Methods_Console
                         export.OpCode = GetOpCode(PassesList[0]);
                     }
                 }
-                else if (bHasTwoPasses && export.Pass.Equals(PassesList[1]))
+                else if (HasTwoPasses && export.Pass.Equals(PassesList[1]))
                 {
                     strInstructions = LoadingList[1];
                     if (Bom.HasRouting &&  string.IsNullOrEmpty(export.OpCode))
@@ -947,7 +944,7 @@ namespace Methods_Console
             {
                 WriteHandPlaceOneSection();
             }
-            if (bAgile2ndPass || (!bHasTwoPasses && !Bom.HasRouting))
+            if (bAgile2ndPass || (!HasTwoPasses && !Bom.HasRouting))
             {
                 if (!bAgile2ndPass)
                     WriteMidProgramFooterHeader(true);
@@ -980,7 +977,7 @@ namespace Methods_Console
                 }
 
             }
-            if(bHasTwoPasses && Bom.HasRouting)
+            if(HasTwoPasses && Bom.HasRouting)
                 WriteHandPlaceTwoSection();               
         }
 
@@ -1054,10 +1051,10 @@ namespace Methods_Console
 
                         string bompn = OpByRefCopy[refdesInput[0]].Split(':')[1];
                         string bomop = OpByRefCopy[refdesInput[0]].Split(':')[0];
-                        string progop = null;
+                        List<string> progops = null;
                         if (!string.IsNullOrEmpty(export.OpCode))
-                            progop = export.OpCode;
-                        if (partnum.Equals(bompn) && !string.IsNullOrEmpty(progop) && progop.Equals(bomop))
+                            progops = GetAltSMTCodesByPass(Bom.RouteList, export.Pass);
+                        if (partnum.Equals(bompn) && !string.IsNullOrEmpty(export.OpCode) && progops.Contains(bomop))
                             OpByRefCopy.Remove(refdesInput[0]);
                     }
                         
@@ -1097,10 +1094,11 @@ namespace Methods_Console
 
                                 string bompn = OpByRefCopy[refdesInput[0]].Split(':')[1];
                                 string bomop = OpByRefCopy[refdesInput[0]].Split(':')[0];
-                                string progop = null;
+                                List<string> progops = null;
                                 if (!string.IsNullOrEmpty(export.OpCode))
-                                    progop = export.OpCode;
-                                if (partnum.Equals(bompn) && !string.IsNullOrEmpty(progop) && progop.Equals(bomop))
+                                    progops = GetAltSMTCodesByPass(Bom.RouteList, export.Pass);
+                                    //progop = export.OpCode;
+                                if (partnum.Equals(bompn) && !string.IsNullOrEmpty(export.OpCode) && progops.Contains(bomop))
                                     OpByRefCopy.Remove(refdesInput[0]);
                             }
                             strTempLine += refdesInput[0] + ',';
@@ -1321,7 +1319,8 @@ namespace Methods_Console
                     pRds.Sort();
                     if (!pRds.SequenceEqual(bRds))
                     {
-                        if(!bRds.Contains("No Ref Des"))
+                        ///added exclusion for typical paste (SMT1,SMT2) ref des's --ct 7/31/22
+                        if(!bRds.Contains("No Ref Des") && !bRds.Contains("SMT1") && !bRds.Contains("SMT2"))
                             strError = "<--Ref Des Mismatch!!";
                     }
                     int ibomqty = 0;

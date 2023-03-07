@@ -359,7 +359,8 @@ namespace Methods_Console
                 strFails += "\nPlease manually choose pass/machine for these.";       
                 MessageBox.Show(strFails, "Could Not Auto Detect", MessageBoxButton.OK, MessageBoxImage.Information);
             }
-            ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
+            //ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
+            ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => dictMachines.First(x => x.Value == m.MachineName).Key).ToList();
             PopulateUIBoxes();
         }
 
@@ -418,15 +419,23 @@ namespace Methods_Console
             string strCurrentPass = lstProgComboBoxes.First().Text;
             if (strCurrentPass.Equals("SMT 1"))
             {
-                ExportList = ExportList.OrderByDescending(p => p.Pass).ThenBy(m => m.MachineName).ToList();              
+                ExportList = ExportList.OrderByDescending(p => p.Pass).ThenBy(m => dictMachines.First(x => x.Value == m.MachineName).Key).ToList();
             }
             else if (strCurrentPass.Equals("SMT 2"))
             {
-                ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => m.MachineName).ToList();
+                ExportList = ExportList.OrderBy(p => p.Pass).ThenBy(m => dictMachines.First(x => x.Value == m.MachineName).Key).ToList();
             }
             foreach(var export in ExportList)
             {
-                export.Pass = (string)lstProgComboBoxes[i].SelectedValue;
+                if(export.Pass.Equals(lstPasses[0]))
+                {
+                    export.Pass = lstPasses[1];
+                }
+                else if(export.Pass.Equals(lstPasses[1]))
+                {
+                    export.Pass = lstPasses[0];
+                }
+                lstProgComboBoxes[i].SelectedValue = export.Pass;
                 lstProgTextBoxes[i].Text = export.ProgramName;
                 lstProgDateLabels[i].Content = export.DateCreated;
                 foreach (var item in dictMachines)
@@ -453,11 +462,7 @@ namespace Methods_Console
             List<string> failedPassDetection = new List<string>();
             Regex reBot = new Regex(@"\bBOT\b", RegexOptions.IgnoreCase);
             Regex reTop = new Regex(@"\bTOP\b", RegexOptions.IgnoreCase);
-            Regex reFuzion = new Regex(@"\s+FZ60XC\s+",RegexOptions.IgnoreCase);
-            Regex reGCOne = new Regex(@"\s+(GC-?_?60-?_?1?)\s+", RegexOptions.IgnoreCase);
-            Regex reGCTwo = new Regex(@"\s+(GC-?_?60-?_?2)\s+", RegexOptions.IgnoreCase);
-            Regex reGI = new Regex(@"\s+(GI-?_?14-?_?\d?)\s+", RegexOptions.IgnoreCase);
-            Regex reGX = new Regex(@"\s+(GX-?_?11)\s+", RegexOptions.IgnoreCase);
+            string machName = null;
 
             foreach (Ci2Parser parser in ExportList)
             {
@@ -480,27 +485,8 @@ namespace Methods_Console
                 {
                     failedPassDetection.Add(parser.ProgramName);
                 }
-                if (reFuzion.IsMatch(filename))
-                {
-                    parser.MachineName = dictMachines[0];
-                }
-                else if (reGCOne.IsMatch(filename))
-                {
-                    parser.MachineName = dictMachines[1];
-                }
-                else if (reGCTwo.IsMatch(filename))
-                {
-                    parser.MachineName = dictMachines[2];
-                }
-                else if (reGI.IsMatch(filename))
-                {
-                    parser.MachineName = dictMachines[3];
-                }
-                else if (reGX.IsMatch(filename))
-                {
-                    parser.MachineName = dictMachines[4];
-                }
-                else
+                machName= DetectMachineName(parser.ProgramName);
+                if (machName.Equals("NotFound"))
                 {
                     bool bFound = false;
                     foreach (string machine in MachineNames)
@@ -514,12 +500,57 @@ namespace Methods_Console
                     if(bFound == false)
                         failedMachineDetection.Add(parser.ProgramName);
                 }
+                else
+                {
+                    parser.MachineName = machName;
+                }
             }
             if (failedMachineDetection.Count == 0 && failedPassDetection.Count == 0)
                 bDectectionSuccessful = true;
 
             return Tuple.Create(bDectectionSuccessful, failedPassDetection, failedMachineDetection);
 
+        }
+
+        private string DetectMachineName(string programName)
+        {
+            string machineName;
+            Regex reFuzion = new Regex(@"\s+FZ60XC\s+", RegexOptions.IgnoreCase);
+            Regex reGCOne = new Regex(@"\s+(GC-?_?60-?_?1?)\s+", RegexOptions.IgnoreCase);
+            Regex reGCTwo = new Regex(@"\s+(GC-?_?60-?_?2)\s+", RegexOptions.IgnoreCase);
+            Regex reGX = new Regex(@"\s+(GX-?_?11)\s+", RegexOptions.IgnoreCase);
+            Regex reGXOne = new Regex(@"\s+(GX-?_?11-?_?1)\s+", RegexOptions.IgnoreCase);
+            Regex reGXTwo = new Regex(@"\s+(GX-?_?11-?_?2)\s+", RegexOptions.IgnoreCase);
+
+            if (reGCOne.IsMatch(programName))
+            {
+                machineName = dictMachines[0];
+            }
+            else if (reGCTwo.IsMatch(programName))
+            {
+                machineName = dictMachines[1];
+            }
+            else if (reFuzion.IsMatch(programName))
+            {
+                machineName = dictMachines[2];
+            }
+            else if (reGX.IsMatch(programName))
+            {
+                machineName = dictMachines[3];
+            }
+            else if (reGXOne.IsMatch(programName))
+            {
+                machineName = dictMachines[4];
+            }
+            else if (reGXTwo.IsMatch(programName))
+            {
+                machineName = dictMachines[5];
+            }
+            else
+            {
+                machineName = "NotFound";
+            }
+            return machineName;
         }
 
         private void setupsheetbutton_Click(object sender, RoutedEventArgs e)
@@ -1065,7 +1096,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[0].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[0].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[0].SelectedIndex = 1;
                     else
@@ -1103,7 +1136,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[1].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[1].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[1].SelectedIndex = 1;
                     else
@@ -1141,7 +1176,9 @@ namespace Methods_Console
                         ExportList.Add(parser);                 
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[2].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[2].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[2].SelectedIndex = 1;
                     else
@@ -1179,7 +1216,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[3].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[3].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[3].SelectedIndex = 1;
                     else
@@ -1217,7 +1256,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[4].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[4].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[4].SelectedIndex = 1;
                     else
@@ -1255,7 +1296,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[5].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[5].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[5].SelectedIndex = 1;
                     else
@@ -1293,7 +1336,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[6].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[6].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[6].SelectedIndex = 1;
                     else
@@ -1331,7 +1376,9 @@ namespace Methods_Console
                         ExportList.Add(parser);
                     (sender as TextBox).Text = parser.ProgramName;
                     lstProgDateLabels[7].Content = parser.DateCreated;
-                    AutoDetectExportInfo();
+                    parser.Pass = lstProgComboBoxes[7].Text;
+                    //AutoDetectExportInfo();
+                    parser.MachineName = DetectMachineName(parser.ProgramName);
                     if (parser.Pass.Equals(lstPasses[1]))
                         lstProgComboBoxes[7].SelectedIndex = 1;
                     else

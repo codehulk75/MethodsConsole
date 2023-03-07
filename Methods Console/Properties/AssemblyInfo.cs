@@ -10,7 +10,7 @@ using System.Windows;
 [assembly: AssemblyTitle("Methods Console")]
 [assembly: AssemblyDescription("A collection of software tools designed for Methods personnel.")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Benchmark Electronics, Inc.")]
+[assembly: AssemblyCompany("Benchmark Nashua")]
 [assembly: AssemblyProduct("Methods Console")]
 [assembly: AssemblyCopyright("Copyright ©  2018")]
 [assembly: AssemblyTrademark("")]
@@ -51,5 +51,5 @@ using System.Windows;
 // You can specify all the values or you can default the Build and Revision Numbers 
 // by using the '*' as shown below:
 // [assembly: AssemblyVersion("1.0.*")]
-[assembly: AssemblyVersion("2.3.2.0")]
-[assembly: AssemblyFileVersion("2.3.2.0")]
+[assembly: AssemblyVersion("2.5.0.0")]
+[assembly: AssemblyFileVersion("2.5.0.0")]

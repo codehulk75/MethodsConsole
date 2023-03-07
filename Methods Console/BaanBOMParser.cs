@@ -93,24 +93,34 @@ namespace Methods_Console
 
             //Regex reItemInfoRow= new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|Purchased\s+\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
             //Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+)\s*\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
-            Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+.*)\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Operation, 5-BOMQty
+            ///LAST WORKING VERSION BEFORE LN Regex reItemInfoRow = new Regex(@"1\s+\|\s*([0-9]{1,4})/\s+([0-9])\|(\S+.*)\|(.*)\|.*\|\s*([0-9]{1,4}).*\|.*\|.*\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Desc, 5-Operation, 6-BOMQty
             ///Line above is another fix for the reItemInfoRow regex.  Part numbers are now coming with spaces in them, 
             ///so, I guess we have part phrases now, not part numbers, unbelievable.
             ///anyway the regex now has to capture the part number field and then trim it in case of leading or trailing space between separators |
             ///See other line below, trimming strPN variable
             ///5/2/2019
             ///
+            ///8/22/2022 - STARTING LN VERSION (WITH SINGLE LEVEL LN BOM) OF reItemInfoRow 
+            ///pn and desc were moved to different variable, so LN version removes them for this variable. Also redoing regex for new format of this line
+            ///
+            
+            Regex reItemInfoRow = new Regex(@"^\s+(\d{1,5})/\s+([0-9])\|\s+([0-9]{1,4})\s*\|\s\w+\s\|\s+(Yes|No)\s+\|\s*[0-9]+\s*\|.*\|.*\|\s\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}\s+\|.*\|.*\|.*\|.*\|\s*(\d+\.\d+)\s*\|\s*\d+\.\d+\s*\|\s*\d+\.\d+\s*\|\s*\d+\s*\|.*\|(Yes|No)\s+\|"); //Captures 1-FindNum, 2-Seq, 3-PN, 4-Desc, 5-Operation, 6-BOMQty
+
+
             Regex reDate = new Regex(@"Date\s+:\s(\d{2}-\d{2}-\d{2})");
-            Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|\s+\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
+            Regex reRefDes = new Regex(@"^\s+\|\s(\w+)\s+\|.*\|\s+\d{1,4}\.\d{4}\s+\|\r?$");
             Regex reAssemblyName = new Regex(@"Manufactured Item\s+:\s+(\S+)");
             Regex reRev = new Regex(@"Revision\s*:\s+(\S+)");
-            Regex reRouteList = new Regex(@"^\s+\|\s+(\d{1,4})/\s+\d\s+\|\s+([A-Z]?\d{1,4})\s+\|(.*)\|\d{2}-\d{2}-\d{2}\s+\|\s+\|\s+\w+\s+\|\s+\w*\s+\|\s+\d{1,3}\s+\|\s+\d+\.\d+\s+\|\s+\d+\.\d+\s*\|\s+\|\r?$");
+            Regex reRouteList = new Regex(@"^\s+\|\s*(\d{1,3})/\s+\d+\|\s+([A-Z]?\d{1,3})\s*\|(.*)\|\s+([A-Z]{3}[0-9]{3})\s*\|.*\|\s+\d+\.\d{3}\|\s+\d+\.\d{2}\s+\|\s+\d+\.\d{3}\|\s+\d+\.\d{4}\|\s+\d+\.\d{2}\|.*\|\r?$");
             Regex reDescription = new Regex(@"^Description\s+:\s+(.*)");
+            Regex rePNDesc = new Regex(@"^Item\s{8}:\s{10}(.{40})(.{1,30})$");
             bool bDateFound = false;
             bool bAssemblyNameFound = false;
             bool bRevFound = false;
             bool bDescriptionFound = false;
             string strCurrentFnSeq = null;
+            string strCurrentPN = null;
+            string strCurrentDesc = null;
 
             try
             {
@@ -156,6 +166,12 @@ namespace Methods_Console
                             continue;
                         }
                     }
+                    Match matchPnDesc = rePNDesc.Match(line);
+                    if(matchPnDesc.Success)
+                    {
+                        strCurrentPN = matchPnDesc.Groups[1].Value.Trim();
+                        strCurrentDesc = matchPnDesc.Groups[2].Value.Trim();
+                    }
                     Match match = reItemInfoRow.Match(line);
                     if (match.Success)
                     {   
@@ -163,10 +179,10 @@ namespace Methods_Console
                         //string strPN = match.Groups[3].Value;
                         //testing capturing part number row with wildcard, no restriction between pipes, so need to trim
                         //see next line
-                        string strPN = match.Groups[3].Value.Trim();
-                        string strDesc = match.Groups[4].Value;
-                        string strOp = match.Groups[5].Value;
-                        string strBOMQty = match.Groups[6].Value.Trim();
+                        string strPN = strCurrentPN;
+                        string strDesc = strCurrentDesc;
+                        string strOp = match.Groups[3].Value;
+                        string strBOMQty = match.Groups[5].Value.Trim();
                         strBOMQty = strBOMQty.Trim('0');
                         if (strBOMQty.EndsWith("."))
                             strBOMQty = strBOMQty.Trim('.');
@@ -196,7 +212,23 @@ namespace Methods_Console
                     Match matchRouteList = reRouteList.Match(line);
                     if (matchRouteList.Success)
                     {
-                        string strRouteStep = matchRouteList.Groups[1].Value + ":" + matchRouteList.Groups[2].Value + ":" + matchRouteList.Groups[3].Value.Trim();
+                        string opnum = matchRouteList.Groups[1].Value;
+                        string tasknum = matchRouteList.Groups[2].Value;
+                        string taskdesc = matchRouteList.Groups[3].Value.Trim();                  
+                        if (tasknum.Equals("B001")) // #LNedit - If this is a feeder setup op, we gotta turn it into an smt op, so we can tell which pass it is
+                        {
+                            if (RouteList.Any(x => x.Contains("SMT 1")))
+                            {
+                                tasknum = "9212";
+                                taskdesc = "SMT 2";
+                            }
+                            else
+                            {
+                                tasknum = "9211";
+                                taskdesc = "SMT 1";
+                            }
+                        }
+                        string strRouteStep =  opnum + ":" + tasknum + ":" + taskdesc;
                         RouteList.Add(strRouteStep);
                     }
 

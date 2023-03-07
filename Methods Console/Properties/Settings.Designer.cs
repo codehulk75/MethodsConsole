@@ -12,7 +12,7 @@ namespace Methods_Console.Properties {
     
     
     [global::System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "14.0.0.0")]
+    [global::System.CodeDom.Compiler.GeneratedCodeAttribute("Microsoft.VisualStudio.Editors.SettingsDesigner.SettingsSingleFileGenerator", "16.6.0.0")]
     internal sealed partial class Settings : global::System.Configuration.ApplicationSettingsBase {
         
         private static Settings defaultInstance = ((Settings)(global::System.Configuration.ApplicationSettingsBase.Synchronized(new Settings())));
@@ -67,7 +67,7 @@ namespace Methods_Console.Properties {
         
         [global::System.Configuration.ApplicationScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("FZ60XC;GC-60_1;GC-60_2;GI-14;GX-11")]
+        [global::System.Configuration.DefaultSettingValueAttribute("GC-60_1;GC-60_2;FZ60XC;GX-11;GX-11_1;GX-11_2")]
         public string SmtMachines {
             get {
                 return ((string)(this["SmtMachines"]));
